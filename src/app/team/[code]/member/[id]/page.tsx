@@ -14,11 +14,13 @@ export default function MemberPage() {
 
   const [language, setLanguage] = useState('python');
   const [snippet, setSnippet] = useState('');
+  const [description, setDescription] = useState('');
   const [editorCode, setEditorCode] = useState('');
   const [output, setOutput] = useState('');
   const [running, setRunning] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [revealCode, setRevealCode] = useState('');
   const [error, setError] = useState('');
   const editorRef = useRef<unknown>(null);
 
@@ -29,6 +31,7 @@ export default function MemberPage() {
       if (res.ok) {
         setSnippet(data.code);
         setEditorCode(data.code);
+        setDescription(data.description || '');
       }
     } catch {
       setError('Failed to load snippet');
@@ -92,6 +95,7 @@ export default function MemberPage() {
         return;
       }
 
+      setRevealCode(data.revealCode || '');
       setSubmitted(true);
     } catch {
       setError('Network error. Try again.');
@@ -109,10 +113,34 @@ export default function MemberPage() {
       <div className="page-container">
         <div className="glass-card animate-fade-in" style={{ maxWidth: 520, width: '100%', padding: '48px 40px', textAlign: 'center' }}>
           <div style={{ fontSize: '4rem', marginBottom: 16 }} className="checkmark-bounce">✅</div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 12 }}>Output Submitted!</h2>
-          <p style={{ color: 'var(--color-text-muted)', marginBottom: 24 }}>
-            Your submission for Member {memberNo} has been locked. Wait for all teammates to submit.
-          </p>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 20 }}>Output Submitted!</h2>
+
+          {/* Reveal Code Display */}
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(168,85,247,0.15))',
+            border: '2px solid rgba(99,102,241,0.4)',
+            borderRadius: 16,
+            padding: '28px 24px',
+            marginBottom: 24
+          }}>
+            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginBottom: 12 }}>
+              🔑 Your unlock fragment for Member {memberNo}:
+            </p>
+            <div style={{
+              fontSize: '3.5rem',
+              fontWeight: 900,
+              letterSpacing: '0.3em',
+              color: 'var(--color-primary)',
+              fontFamily: 'monospace',
+              textShadow: '0 0 20px rgba(99,102,241,0.5)'
+            }}>
+              {revealCode}
+            </div>
+            <p style={{ color: 'var(--color-warning)', fontSize: '0.85rem', marginTop: 16, fontWeight: 600 }}>
+              📝 Note this down! Combine all 3 members&apos; codes to form the 6-digit key.
+            </p>
+          </div>
+
           <button className="btn-secondary" onClick={() => router.push(`/team/${code}/unlock`)}>
             Go to Team Unlock Page →
           </button>
@@ -160,6 +188,20 @@ export default function MemberPage() {
               </button>
             </div>
           </div>
+
+          {/* Problem Description */}
+          {description && (
+            <div style={{
+              padding: '12px 16px',
+              background: 'rgba(30,41,59,0.9)',
+              borderBottom: '1px solid var(--color-border)',
+              fontSize: '0.9rem',
+              lineHeight: 1.6,
+              color: '#e2e8f0'
+            }}>
+              {description}
+            </div>
+          )}
 
           {/* Monaco Editor */}
           <div style={{ flex: 1, minHeight: 400 }}>

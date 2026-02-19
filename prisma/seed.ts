@@ -4,9 +4,9 @@ const prisma = new PrismaClient();
 
 // Placeholder buggy snippets — replace with actual competition code before event
 const snippetsBySet: Record<string, Record<number, Record<string, string>>> = {
-  A: {
-    1: {
-      c: `#include <stdio.h>
+    A: {
+        1: {
+            c: `#include <stdio.h>
 int main() {
     int arr[5] = {10, 20, 30, 40, 50};
     int sum = 0;
@@ -16,7 +16,7 @@ int main() {
     printf("Sum: %d\\n", sum);
     return 0;
 }`,
-      java: `public class Main {
+            java: `public class Main {
     public static void main(String[] args) {
         int[] arr = {10, 20, 30, 40, 50};
         int sum = 0;
@@ -26,14 +26,14 @@ int main() {
         System.out.println("Sum: " + sum);
     }
 }`,
-      python: `arr = [10, 20, 30, 40, 50]
+            python: `arr = [10, 20, 30, 40, 50]
 sum = 0
 for i in range(6):  # Bug: off-by-one
     sum += arr[i]
 print("Sum:", sum)`
-    },
-    2: {
-      c: `#include <stdio.h>
+        },
+        2: {
+            c: `#include <stdio.h>
 int factorial(int n) {
     if (n == 0) return 1;
     return n * factorial(n);  // Bug: infinite recursion
@@ -42,7 +42,7 @@ int main() {
     printf("Factorial of 5: %d\\n", factorial(5));
     return 0;
 }`,
-      java: `public class Main {
+            java: `public class Main {
     static int factorial(int n) {
         if (n == 0) return 1;
         return n * factorial(n);  // Bug: infinite recursion
@@ -51,15 +51,15 @@ int main() {
         System.out.println("Factorial of 5: " + factorial(5));
     }
 }`,
-      python: `def factorial(n):
+            python: `def factorial(n):
     if n == 0:
         return 1
     return n * factorial(n)  # Bug: infinite recursion
 
 print("Factorial of 5:", factorial(5))`
-    },
-    3: {
-      c: `#include <stdio.h>
+        },
+        3: {
+            c: `#include <stdio.h>
 #include <string.h>
 int main() {
     char str[] = "hello";
@@ -72,7 +72,7 @@ int main() {
     printf("Reversed: %s\\n", reversed);
     return 0;
 }`,
-      java: `public class Main {
+            java: `public class Main {
     public static void main(String[] args) {
         String str = "hello";
         int len = str.length();
@@ -83,17 +83,17 @@ int main() {
         System.out.println("Reversed: " + reversed);
     }
 }`,
-      python: `text = "hello"
+            python: `text = "hello"
 length = len(text)
 reversed_str = ""
 for i in range(length):
     reversed_str += text[length - i]  # Bug: should be length-1-i
 print("Reversed:", reversed_str)`
-    }
-  },
-  B: {
-    1: {
-      c: `#include <stdio.h>
+        }
+    },
+    B: {
+        1: {
+            c: `#include <stdio.h>
 int main() {
     int n = 5;
     for (int i = 1; i <= n; i++) {
@@ -104,7 +104,7 @@ int main() {
     }
     return 0;
 }`,
-      java: `public class Main {
+            java: `public class Main {
     public static void main(String[] args) {
         int n = 5;
         for (int i = 1; i <= n; i++) {
@@ -115,15 +115,15 @@ int main() {
         }
     }
 }`,
-      python: `n = 5
+            python: `n = 5
 for i in range(1, n + 1):
     for j in range(1, i + 1):
         i += 1  # Bug: should not modify i
         print("* ", end="")
     print()`
-    },
-    2: {
-      c: `#include <stdio.h>
+        },
+        2: {
+            c: `#include <stdio.h>
 int isPrime(int n) {
     if (n < 2) return 0;
     for (int i = 2; i < n; i++) {
@@ -137,7 +137,7 @@ int main() {
     }
     return 0;
 }`,
-      java: `public class Main {
+            java: `public class Main {
     static boolean isPrime(int n) {
         if (n < 2) return false;
         for (int i = 2; i < n; i++) {
@@ -151,7 +151,7 @@ int main() {
         }
     }
 }`,
-      python: `def is_prime(n):
+            python: `def is_prime(n):
     if n < 2:
         return False
     for i in range(2, n):
@@ -162,9 +162,9 @@ int main() {
 for i in range(1, 21):
     if is_prime(i):
         print(i, end=" ")`
-    },
-    3: {
-      c: `#include <stdio.h>
+        },
+        3: {
+            c: `#include <stdio.h>
 void bubbleSort(int arr[], int n) {
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {  // Bug: should be n-i-1
@@ -182,7 +182,7 @@ int main() {
     for (int i = 0; i < 5; i++) printf("%d ", arr[i]);
     return 0;
 }`,
-      java: `public class Main {
+            java: `public class Main {
     static void bubbleSort(int[] arr) {
         int n = arr.length;
         for (int i = 0; i < n; i++) {
@@ -201,7 +201,7 @@ int main() {
         for (int x : arr) System.out.print(x + " ");
     }
 }`,
-      python: `def bubble_sort(arr):
+            python: `def bubble_sort(arr):
     n = len(arr)
     for i in range(n):
         for j in range(n):  # Bug: should be n-i-1
@@ -211,11 +211,11 @@ int main() {
 
 arr = [5, 3, 8, 1, 2]
 print(bubble_sort(arr))`
-    }
-  },
-  C: {
-    1: {
-      c: `#include <stdio.h>
+        }
+    },
+    C: {
+        1: {
+            c: `#include <stdio.h>
 int fibonacci(int n) {
     if (n <= 0) return 0;
     if (n == 1) return 1;
@@ -226,7 +226,7 @@ int main() {
         printf("%d ", fibonacci(i));
     return 0;
 }`,
-      java: `public class Main {
+            java: `public class Main {
     static int fibonacci(int n) {
         if (n <= 0) return 0;
         if (n == 1) return 1;
@@ -237,7 +237,7 @@ int main() {
             System.out.print(fibonacci(i) + " ");
     }
 }`,
-      python: `def fibonacci(n):
+            python: `def fibonacci(n):
     if n <= 0:
         return 0
     if n == 1:
@@ -246,9 +246,9 @@ int main() {
 
 for i in range(10):
     print(fibonacci(i), end=" ")`
-    },
-    2: {
-      c: `#include <stdio.h>
+        },
+        2: {
+            c: `#include <stdio.h>
 int binarySearch(int arr[], int n, int target) {
     int low = 0, high = n;  // Bug: should be n-1
     while (low < high) {  // Bug: should be low <= high
@@ -264,7 +264,7 @@ int main() {
     printf("Found at: %d\\n", binarySearch(arr, 7, 23));
     return 0;
 }`,
-      java: `public class Main {
+            java: `public class Main {
     static int binarySearch(int[] arr, int target) {
         int low = 0, high = arr.length;  // Bug: should be length-1
         while (low < high) {  // Bug: should be low <= high
@@ -280,7 +280,7 @@ int main() {
         System.out.println("Found at: " + binarySearch(arr, 23));
     }
 }`,
-      python: `def binary_search(arr, target):
+            python: `def binary_search(arr, target):
     low, high = 0, len(arr)  # Bug: should be len(arr)-1
     while low < high:  # Bug: should be low <= high
         mid = (low + high) // 2
@@ -294,9 +294,9 @@ int main() {
 
 arr = [2, 5, 8, 12, 16, 23, 38]
 print("Found at:", binary_search(arr, 23))`
-    },
-    3: {
-      c: `#include <stdio.h>
+        },
+        3: {
+            c: `#include <stdio.h>
 int power(int base, int exp) {
     int result = 0;  // Bug: should be 1
     for (int i = 0; i < exp; i++) {
@@ -308,7 +308,7 @@ int main() {
     printf("2^10 = %d\\n", power(2, 10));
     return 0;
 }`,
-      java: `public class Main {
+            java: `public class Main {
     static int power(int base, int exp) {
         int result = 0;  // Bug: should be 1
         for (int i = 0; i < exp; i++) {
@@ -320,18 +320,18 @@ int main() {
         System.out.println("2^10 = " + power(2, 10));
     }
 }`,
-      python: `def power(base, exp):
+            python: `def power(base, exp):
     result = 0  # Bug: should be 1
     for i in range(exp):
         result += base  # Bug: should be result *= base
     return result
 
 print("2^10 =", power(2, 10))`
-    }
-  },
-  D: {
-    1: {
-      c: `#include <stdio.h>
+        }
+    },
+    D: {
+        1: {
+            c: `#include <stdio.h>
 int gcd(int a, int b) {
     while (b != 0) {
         int temp = b;
@@ -344,7 +344,7 @@ int main() {
     printf("GCD of 48 and 18: %d\\n", gcd(48, 18));
     return 0;
 }`,
-      java: `public class Main {
+            java: `public class Main {
     static int gcd(int a, int b) {
         while (b != 0) {
             int temp = b;
@@ -357,7 +357,7 @@ int main() {
         System.out.println("GCD of 48 and 18: " + gcd(48, 18));
     }
 }`,
-      python: `def gcd(a, b):
+            python: `def gcd(a, b):
     while b != 0:
         temp = b
         b = a % b
@@ -365,9 +365,9 @@ int main() {
     return a
 
 print("GCD of 48 and 18:", gcd(48, 18))`
-    },
-    2: {
-      c: `#include <stdio.h>
+        },
+        2: {
+            c: `#include <stdio.h>
 int main() {
     int matrix[3][3] = {{1,2,3},{4,5,6},{7,8,9}};
     int transpose[3][3];
@@ -383,7 +383,7 @@ int main() {
     }
     return 0;
 }`,
-      java: `public class Main {
+            java: `public class Main {
     public static void main(String[] args) {
         int[][] matrix = {{1,2,3},{4,5,6},{7,8,9}};
         int[][] transpose = new int[3][3];
@@ -398,7 +398,7 @@ int main() {
         }
     }
 }`,
-      python: `matrix = [[1,2,3],[4,5,6],[7,8,9]]
+            python: `matrix = [[1,2,3],[4,5,6],[7,8,9]]
 transpose = [[0]*3 for _ in range(3)]
 for i in range(3):
     for j in range(3):
@@ -406,9 +406,9 @@ for i in range(3):
 
 for row in transpose:
     print(*row)`
-    },
-    3: {
-      c: `#include <stdio.h>
+        },
+        3: {
+            c: `#include <stdio.h>
 int main() {
     int arr[] = {3, 1, 4, 1, 5, 9, 2, 6};
     int n = 8;
@@ -421,7 +421,7 @@ int main() {
     printf("Max: %d, Min: %d\\n", max, min);
     return 0;
 }`,
-      java: `public class Main {
+            java: `public class Main {
     public static void main(String[] args) {
         int[] arr = {3, 1, 4, 1, 5, 9, 2, 6};
         int max = arr[0], min = arr[0];
@@ -432,7 +432,7 @@ int main() {
         System.out.println("Max: " + max + ", Min: " + min);
     }
 }`,
-      python: `arr = [3, 1, 4, 1, 5, 9, 2, 6]
+            python: `arr = [3, 1, 4, 1, 5, 9, 2, 6]
 max_val = arr[0]
 min_val = arr[0]
 for x in arr:
@@ -441,85 +441,116 @@ for x in arr:
     if x > min_val:  # Bug: should be <
         min_val = x
 print(f"Max: {max_val}, Min: {min_val}")`
+        }
     }
-  }
 };
 
 const unlockKeys: Record<string, string> = {
-  A: '482917',
-  B: '735261',
-  C: '194826',
-  D: '653748'
+    A: '482917',
+    B: '735261',
+    C: '194826',
+    D: '653748'
+};
+
+// Description for each snippet (same across all 3 languages for a given set + member)
+const snippetDescriptions: Record<string, Record<number, string>> = {
+    A: {
+        1: '📌 Goal: Calculate the sum of all elements in an array of 5 integers [10, 20, 30, 40, 50]. The correct output should print "Sum: 150". Find and fix the bug to get the right result.',
+        2: '📌 Goal: Compute the factorial of 5 using recursion. The function should return 5! = 120, printing "Factorial of 5: 120". Find and fix the bug in the recursive call.',
+        3: '📌 Goal: Reverse the string "hello" and print the result. The correct output should be "Reversed: olleh". Find and fix the bug in the character indexing logic.'
+    },
+    B: {
+        1: '📌 Goal: Print a right-angled triangle pattern of asterisks (*) with 5 rows. Row 1 has 1 star, row 2 has 2 stars, and so on. Find and fix the bug in the loop logic.',
+        2: '📌 Goal: Print all prime numbers between 1 and 20. The correct output should be: 2 3 5 7 11 13 17 19. Find and fix the bug in the prime-checking logic.',
+        3: '📌 Goal: Sort the array [5, 3, 8, 1, 2] in ascending order using Bubble Sort. The correct output should be "1 2 3 5 8". Find and fix the bugs in the sorting algorithm.'
+    },
+    C: {
+        1: '📌 Goal: Print the first 10 Fibonacci numbers: 0 1 1 2 3 5 8 13 21 34. Find and fix the bug in the recursive formula.',
+        2: '📌 Goal: Use Binary Search to find the index of the number 23 in the sorted array [2, 5, 8, 12, 16, 23, 38]. The correct output should be "Found at: 5". Find and fix the bugs.',
+        3: '📌 Goal: Calculate 2 raised to the power 10 (2^10 = 1024) using a loop. The correct output should be "2^10 = 1024". Find and fix the bugs in the power function.'
+    },
+    D: {
+        1: '📌 Goal: Calculate the GCD (Greatest Common Divisor) of 48 and 18 using the Euclidean algorithm. The correct output should be "GCD of 48 and 18: 6". Find and fix the bug.',
+        2: '📌 Goal: Compute the transpose of a 3×3 matrix. The rows and columns should be swapped. Find and fix the bug in the transposition logic.',
+        3: '📌 Goal: Find the maximum and minimum values in the array [3, 1, 4, 1, 5, 9, 2, 6]. The correct output should be "Max: 9, Min: 1". Find and fix the bug in the comparison.'
+    }
 };
 
 async function main() {
-  // Clear existing data
-  await prisma.round2Submission.deleteMany();
-  await prisma.keyAttempt.deleteMany();
-  await prisma.member.deleteMany();
-  await prisma.team.deleteMany();
-  await prisma.snippet.deleteMany();
-  await prisma.set.deleteMany();
+    // Clear existing data
+    await prisma.round2Submission.deleteMany();
+    await prisma.keyAttempt.deleteMany();
+    await prisma.member.deleteMany();
+    await prisma.team.deleteMany();
+    await prisma.snippet.deleteMany();
+    await prisma.set.deleteMany();
 
-  // Create sets
-  const sets: Record<string, { id: number }> = {};
-  for (const setName of ['A', 'B', 'C', 'D']) {
-    sets[setName] = await prisma.set.create({
-      data: {
-        name: setName,
-        unlockKey: unlockKeys[setName]
-      }
-    });
-  }
-
-  // Create snippets
-  for (const [setName, members] of Object.entries(snippetsBySet)) {
-    for (const [memberNoStr, languages] of Object.entries(members)) {
-      for (const [language, code] of Object.entries(languages)) {
-        await prisma.snippet.create({
-          data: {
-            setId: sets[setName].id,
-            memberNo: parseInt(memberNoStr),
-            language,
-            code
-          }
+    // Create sets
+    const sets: Record<string, { id: number }> = {};
+    for (const setName of ['A', 'B', 'C', 'D']) {
+        sets[setName] = await prisma.set.create({
+            data: {
+                name: setName,
+                unlockKey: unlockKeys[setName]
+            }
         });
-      }
     }
-  }
 
-  // Create 20 teams (T01-T20) with round-robin set assignment
-  const setNames = ['A', 'B', 'C', 'D'];
-  for (let i = 1; i <= 20; i++) {
-    const teamCode = `T${i.toString().padStart(2, '0')}`;
-    const assignedSet = setNames[(i - 1) % 4];
-    const team = await prisma.team.create({
-      data: {
-        teamCode,
-        setId: sets[assignedSet].id,
-        status: 'waiting'
-      }
-    });
-
-    // Create 3 member slots per team
-    for (let m = 1; m <= 3; m++) {
-      await prisma.member.create({
-        data: {
-          teamId: team.id,
-          memberNo: m,
-          isJoined: false,
-          isSubmitted: false
+    // Create snippets
+    for (const [setName, members] of Object.entries(snippetsBySet)) {
+        for (const [memberNoStr, languages] of Object.entries(members)) {
+            const memberNo = parseInt(memberNoStr);
+            const description = snippetDescriptions[setName]?.[memberNo] || '';
+            for (const [language, code] of Object.entries(languages)) {
+                await prisma.snippet.create({
+                    data: {
+                        setId: sets[setName].id,
+                        memberNo,
+                        language,
+                        description,
+                        code
+                    }
+                });
+            }
         }
-      });
     }
-  }
 
-  console.log('✅ Database seeded successfully!');
-  console.log('   4 sets (A-D) with unlock keys');
-  console.log('   36 snippets (4 sets × 3 members × 3 languages)');
-  console.log('   20 teams (T01-T20) with 3 member slots each');
+    // Create 20 teams (T01-T20) with round-robin set assignment
+    const setNames = ['A', 'B', 'C', 'D'];
+    for (let i = 1; i <= 20; i++) {
+        const teamCode = `T${i.toString().padStart(2, '0')}`;
+        const assignedSet = setNames[(i - 1) % 4];
+        const team = await prisma.team.create({
+            data: {
+                teamCode,
+                setId: sets[assignedSet].id,
+                status: 'waiting'
+            }
+        });
+
+        // Create 3 member slots per team
+        // Each member gets a 2-digit fragment of the unlock key
+        const key = unlockKeys[assignedSet];
+        for (let m = 1; m <= 3; m++) {
+            const revealCode = key.substring((m - 1) * 2, m * 2);
+            await prisma.member.create({
+                data: {
+                    teamId: team.id,
+                    memberNo: m,
+                    revealCode,
+                    isJoined: false,
+                    isSubmitted: false
+                }
+            });
+        }
+    }
+
+    console.log('✅ Database seeded successfully!');
+    console.log('   4 sets (A-D) with unlock keys');
+    console.log('   36 snippets (4 sets × 3 members × 3 languages)');
+    console.log('   20 teams (T01-T20) with 3 member slots each');
 }
 
 main()
-  .catch(console.error)
-  .finally(() => prisma.$disconnect());
+    .catch(console.error)
+    .finally(() => prisma.$disconnect());

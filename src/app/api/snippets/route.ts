@@ -37,6 +37,7 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json({
             code: snippet.code,
+            description: snippet.description,
             language: snippet.language,
             setName: team.set.name,
             memberNo,

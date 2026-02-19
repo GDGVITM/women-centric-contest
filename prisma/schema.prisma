@@ -17,12 +17,13 @@ model Set {
 }
 
 model Snippet {
-  id       Int    @id @default(autoincrement())
-  setId    Int
-  memberNo Int    // 1, 2, 3
-  language String // c, java, python
-  code     String
-  set      Set    @relation(fields: [setId], references: [id])
+  id          Int    @id @default(autoincrement())
+  setId       Int
+  memberNo    Int    // 1, 2, 3
+  language    String // c, java, python
+  description String @default("") // Problem scenario shown above the code
+  code        String
+  set         Set    @relation(fields: [setId], references: [id])
 
   @@unique([setId, memberNo, language])
 }
@@ -43,6 +44,7 @@ model Member {
   id          Int       @id @default(autoincrement())
   teamId      Int
   memberNo    Int       // 1, 2, 3
+  revealCode  String    // 2-digit fragment of the unlock key, revealed after submission
   isJoined    Boolean   @default(false)
   joinedAt    DateTime?
   isSubmitted Boolean   @default(false)

@@ -56,6 +56,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({
             success: true,
             allSubmitted,
+            revealCode: member.revealCode,
         });
     } catch {
         return NextResponse.json({ error: 'Server error' }, { status: 500 });
