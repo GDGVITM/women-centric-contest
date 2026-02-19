@@ -26,9 +26,11 @@ export default function AdminDashboard() {
     }
   };
 
+  const [selectedCode, setSelectedCode] = useState<{title: string, code: string} | null>(null);
+
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 30000); // Auto-refresh every 30s
+    const interval = setInterval(fetchData, 5000); // Live refresh every 5s
     return () => clearInterval(interval);
   }, []);
 
@@ -81,26 +83,58 @@ export default function AdminDashboard() {
               <thead className="bg-white/5 text-gray-400 font-medium">
                 <tr>
                   <th className="p-4">Team</th>
-                  <th className="p-4">Set</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4">Members</th>
-                  <th className="p-4">Attempts</th>
+                  <th className="p-4">Round</th>
+                  <th className="p-4">Time Left</th>
+                  <th className="p-4">Progress</th>
                   <th className="p-4">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {teams?.map((team: any) => (
+                {teams?.map((team: any) => {
+                    // Calculate Time Left
+                    let timeLeft = '-';
+                    if (team.startedAt && team.status !== 'completed' && team.status !== 'waiting') {
+                        const start = new Date(team.startedAt).getTime();
+                        const end = start + 45 * 60 * 1000;
+                        const now = Date.now();
+                        const diff = end - now;
+                        if (diff > 0) {
+                            const mins = Math.floor(diff / 60000);
+                            timeLeft = `${mins}m`;
+                        } else {
+                            timeLeft = 'Expired';
+                        }
+                    }
+
+                    return (
                   <tr key={team.id} className="hover:bg-white/[0.02]">
-                    <td className="p-4 font-mono font-bold text-blue-300">{team.teamCode} <span className="text-xs text-gray-500 font-normal ml-2">{team.name}</span></td>
-                    <td className="p-4">{team.set?.name || '-'}</td>
-                    <td className="p-4">
-                      <StatusBadge status={team.status} />
+                    <td className="p-4 font-mono font-bold text-blue-300">
+                        {team.teamCode} 
+                        <div className="text-xs text-gray-500 font-normal">{team.name}</div>
                     </td>
+                    <td className="p-4">
+                        <span className="text-xs font-mono text-gray-400">R{team.currentRound} ({team.set?.name})</span>
+                        <div className="mt-1"><StatusBadge status={team.status} /></div>
+                    </td>
+                    <td className="p-4 font-mono text-yellow-400">{timeLeft}</td>
                     <td className="p-4 text-gray-400">
-                      {team.members.length} / {team.set?.members || 3}
-                    </td>
-                    <td className="p-4">
-                       {team.keyAttempts?.length || 0}
+                      <div className="flex gap-2">
+                        {team.members.map((m: any) => (
+                           <button 
+                                key={m.memberNo}
+                                onClick={() => m.submittedCode && setSelectedCode({ title: `${team.teamCode} - Member ${m.memberNo}`, code: m.submittedCode })}
+                                className={`w-6 h-6 rounded flex items-center justify-center text-[10px] border ${
+                                    m.isSubmitted ? 'bg-green-500/20 border-green-500/50 text-green-400 hover:bg-green-500/30' : 
+                                    m.isJoined ? 'bg-blue-500/20 border-blue-500/50 text-blue-400' : 
+                                    'bg-white/5 border-white/10 text-gray-600'
+                                }`}
+                                title={m.isSubmitted ? "View Submitted Code" : "Not Submitted"}
+                                disabled={!m.submittedCode}
+                           >
+                              {m.memberNo}
+                           </button>
+                        ))}
+                      </div>
                     </td>
                     <td className="p-4">
                       <button
@@ -119,11 +153,26 @@ export default function AdminDashboard() {
                       </button>
                     </td>
                   </tr>
-                ))}
+                )})}
               </tbody>
             </table>
           </div>
         </div>
+
+        {/* Code Modal */}
+        {selectedCode && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => setSelectedCode(null)}>
+                <div className="bg-[#111] border border-white/10 rounded-xl w-full max-w-2xl max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
+                    <div className="p-4 border-b border-white/10 flex justify-between items-center">
+                        <h3 className="font-mono text-blue-400">{selectedCode.title}</h3>
+                        <button onClick={() => setSelectedCode(null)} className="text-gray-400 hover:text-white">✕</button>
+                    </div>
+                    <pre className="p-4 overflow-auto font-mono text-xs text-gray-300 flex-1">
+                        {selectedCode.code}
+                    </pre>
+                </div>
+            </div>
+        )}
 
       </div>
     </div>

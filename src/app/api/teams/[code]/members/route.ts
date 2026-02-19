@@ -65,6 +65,7 @@ export async function GET(
             teamCode: team.teamCode,
             setName: team.set.name,
             status: team.status,
+            currentRound: team.currentRound,
             members: team.members.map((m) => ({
                 memberNo: m.memberNo,
                 isJoined: m.isJoined,

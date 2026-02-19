@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
+import { prisma } from '@/lib/prisma'; // Import Prisma
 
 export async function GET(req: NextRequest) {
     try {
@@ -15,44 +16,43 @@ export async function GET(req: NextRequest) {
 
         const normalizedCode = teamCode.toUpperCase().trim();
 
-        // 1. Load Configs
-        const teamsConfigPath = path.join(process.cwd(), 'src/config/teams.json');
-        const teamsFile = await fs.readFile(teamsConfigPath, 'utf-8');
-        const teamsConfig = JSON.parse(teamsFile);
+        // 1. Fetch Team from DB (for currentRound and Set)
+        const team = await prisma.team.findUnique({
+            where: { teamCode: normalizedCode },
+            include: { set: true }
+        });
 
+        if (!team) {
+             return NextResponse.json({ error: 'Team not found in DB' }, { status: 404 });
+        }
+
+        // 2. Load Problems Config (Static Content)
         const problemsConfigPath = path.join(process.cwd(), 'src/config/problems.json');
         const problemsFile = await fs.readFile(problemsConfigPath, 'utf-8');
         const problemsConfig = JSON.parse(problemsFile);
 
-        if (!teamsConfig || !problemsConfig) {
-            return NextResponse.json({ error: 'System configuration error' }, { status: 500 });
-        }
+        const setTitle = team.set.name; // "A", "B"...
+        const currentRound = team.currentRound || 1;
+        const roundKey = `round${currentRound}`;
 
-        // 2. Validate Team & Get Set
-        const team = teamsConfig.find((t: any) => t.teamCode === normalizedCode);
-        if (!team) {
-             return NextResponse.json({ error: 'Team not found' }, { status: 404 });
-        }
+        // 3. Get Snippet
+        const setProblems = problemsConfig[setTitle];
+        if (!setProblems) return NextResponse.json({ error: `Set ${setTitle} not found` }, { status: 404 });
 
-        const setId = team.set; // "A", "B", ...
-        
-        // 3. Get Snippet from Config
-        const problems = problemsConfig[setId];
-        if (!problems) return NextResponse.json({ error: 'Set not found' }, { status: 404 });
+        const roundProblems = setProblems[roundKey];
+        if (!roundProblems) return NextResponse.json({ code: `// Round ${currentRound} not found in config` });
 
-        const memberProblems = problems[memberNo];
-        if (!memberProblems) return NextResponse.json({ error: 'Member problem not found' }, { status: 404 });
+        const memberProblems = roundProblems[memberNo];
+        if (!memberProblems) return NextResponse.json({ code: `// Member ${memberNo} problem not found` });
 
         const problemData = memberProblems[language];
-        
-        // Handle new structure { code, expectedOutput } or fallback
         const codeContent = typeof problemData === 'string' ? problemData : problemData?.code;
 
         if (!codeContent) return NextResponse.json({ code: `// No problem found for ${language}` });
 
         return NextResponse.json({ 
             code: codeContent,
-            setName: `Set ${setId}`
+            setName: `Set ${setTitle} - Round ${currentRound}`
         });
 
     } catch (error) {

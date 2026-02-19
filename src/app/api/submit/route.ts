@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 
 export async function POST(req: NextRequest) {
     try {
-        const { teamCode, memberNo, output } = await req.json();
+        const { teamCode, memberNo, output, code } = await req.json();
 
         if (!teamCode || ![1, 2, 3].includes(memberNo)) {
             return NextResponse.json({ error: 'Invalid parameters.' }, { status: 400 });
@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
                 data: {
                     isSubmitted: true,
                     output: output || '',
+                    submittedCode: code || '',
                     submittedAt: new Date(),
                 },
             });
@@ -54,10 +55,24 @@ export async function POST(req: NextRequest) {
             );
 
             if (allSubmitted) {
-                await tx.team.update({
-                    where: { id: team.id },
-                    data: { status: 'unlocking' },
-                });
+                if (team.currentRound < 3) {
+                    // Move to next round
+                    await tx.team.update({
+                        where: { id: team.id },
+                        data: { currentRound: { increment: 1 } },
+                    });
+                    // Reset members for next round
+                    await tx.member.updateMany({
+                        where: { teamId: team.id },
+                        data: { isSubmitted: false, output: '' },
+                    });
+                } else {
+                    // Final round completed
+                    await tx.team.update({
+                        where: { id: team.id },
+                        data: { status: 'unlocking' },
+                    });
+                }
             }
 
             return { success: true, allSubmitted };

@@ -67,18 +67,20 @@ export async function POST(req: NextRequest) {
 
         if (teamCode && memberId) {
             try {
-                 // Lazy load config to check answer
-                 // We don't cache this to allow hot-reloading keys
-                 const teamsPath = require('path').join(process.cwd(), 'src/config/teams.json');
-                 const problemsPath = require('path').join(process.cwd(), 'src/config/problems.json');
-                 const fs = require('fs');
-                 
-                 const teams = JSON.parse(fs.readFileSync(teamsPath, 'utf-8'));
-                 const team = teams.find((t: any) => t.teamCode === teamCode);
+                 // Fetch Team from DB to get current round
+                 const { prisma } = await import('@/lib/prisma');
+                 const team = await prisma.team.findUnique({
+                     where: { teamCode },
+                     include: { set: true }
+                 });
                  
                  if (team) {
+                     const problemsPath = require('path').join(process.cwd(), 'src/config/problems.json');
+                     const fs = require('fs');
                      const problems = JSON.parse(fs.readFileSync(problemsPath, 'utf-8'));
-                     const problem = problems[team.set]?.[memberId]?.[language];
+                     
+                     const currentRound = team.currentRound || 1;
+                     const problem = problems[team.set.name]?.[`round${currentRound}`]?.[memberId]?.[language];
                      
                      // Handle { code, expectedOutput } structure
                      const expected = problem?.expectedOutput;

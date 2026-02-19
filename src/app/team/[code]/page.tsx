@@ -85,7 +85,10 @@ export default function TeamPage({ params }: { params: Promise<{ code: string }>
         <h1 style={{ fontSize: '2.5rem', marginBottom: 8, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
           Team <span className="text-gradient">{team?.teamCode}</span>
         </h1>
-        <p style={{ color: 'var(--text-secondary)' }}>Select your slot to begin Round 1.</p>
+        <div style={{ display: 'inline-block', padding: '4px 12px', borderRadius: '20px', background: 'rgba(255,255,255,0.1)', fontSize: '0.9rem', marginTop: 8 }}>
+            Round <span style={{ color: 'var(--gdg-yellow)', fontWeight: 'bold' }}>{team?.currentRound || 1}</span> of 3
+        </div>
+        <p style={{ color: 'var(--text-secondary)', marginTop: 8 }}>Select your slot to begin.</p>
       </motion.div>
 
       {/* Slots Grid */}

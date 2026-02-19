@@ -34,6 +34,7 @@ model Team {
   name              String             // Added name field
   setId             Int
   status            String             @default("waiting") // waiting, round1, unlocking, round2, completed
+  currentRound      Int                @default(1)
   startedAt         DateTime?          // When Round 1 timer started
   createdAt         DateTime           @default(now())
   set               ProblemSet         @relation(fields: [setId], references: [id])
@@ -51,6 +52,7 @@ model Member {
   joinedAt    DateTime?
   isSubmitted Boolean   @default(false)
   output      String?
+  submittedCode String? // Added to store source code
   submittedAt DateTime?
   team        Team      @relation(fields: [teamId], references: [id])
 

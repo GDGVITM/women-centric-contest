@@ -38,6 +38,28 @@ export default function MemberPage({ params }: { params: Promise<{ code: string;
 
   // Determine language based on member ID (initial only) - actually, we verify this against API
   // Fetch snippet whenever language, code, or neutral id changes.
+  // Exit Warning / Tab Switch Warning
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        alert("⚠️ Warning: Switching tabs is monitored. Please stay on this page.");
+      }
+    };
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = ''; // Chrome requires this
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+
   useEffect(() => {
     setOutput(''); // Clear output on switch
     setStatus('idle');
@@ -205,7 +227,6 @@ export default function MemberPage({ params }: { params: Promise<{ code: string;
               <option value="python">PYTHON</option>
               <option value="c">C (GCC)</option>
               <option value="java">JAVA</option>
-              <option value="cpp">C++</option>
             </select>
 
             <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>•</span>
