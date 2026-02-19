@@ -83,13 +83,18 @@ export async function POST(req: NextRequest) {
                      const problems = JSON.parse(fs.readFileSync(problemsPath, 'utf-8'));
                      
                      const currentRound = team.currentRound || 1;
-                     const problem = problems[team.set.name]?.[`round${currentRound}`]?.[memberId]?.[language];
-                     
                      // Handle { code, expectedOutput } structure
+                     const problem = problems[team.set.name]?.[`round${currentRound}`]?.[memberId]?.[language];
                      const expected = problem?.expectedOutput;
                      
+                     console.log(`[Compile Debug] Team: ${teamCode}, Member: ${memberId}`);
+                     console.log(`[Compile Debug] Stdout (Trimmed): "${stdout.trim()}"`);
+                     console.log(`[Compile Debug] Expected (Trimmed): "${expected?.trim()}"`);
+
                      if (expected && stdout.trim() === expected.trim()) {
                          isCorrect = true;
+                     } else {
+                         console.log(`[Compile Debug] Mismatch!`);
                      }
                  }
             } catch (e) {
