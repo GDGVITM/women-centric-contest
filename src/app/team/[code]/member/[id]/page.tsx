@@ -29,6 +29,12 @@ export default function MemberPage() {
       const res = await fetch(`/api/snippets?teamCode=${code}&memberNo=${memberNo}&language=${lang}`);
       const data = await res.json();
       if (res.ok) {
+        // If member already submitted, restore the success screen
+        if (data.isSubmitted && data.revealCode) {
+          setRevealCode(data.revealCode);
+          setSubmitted(true);
+          return;
+        }
         setSnippet(data.code);
         setEditorCode(data.code);
         setDescription(data.description || '');

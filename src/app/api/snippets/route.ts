@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
 
         const team = await prisma.team.findUnique({
             where: { teamCode },
-            include: { set: true },
+            include: { set: true, members: true },
         });
 
         if (!team) {
@@ -35,12 +35,16 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: 'Snippet not found.' }, { status: 404 });
         }
 
+        const member = team.members.find(m => m.memberNo === memberNo);
+
         return NextResponse.json({
             code: snippet.code,
             description: snippet.description,
             language: snippet.language,
             setName: team.set.name,
             memberNo,
+            isSubmitted: member?.isSubmitted || false,
+            revealCode: member?.isSubmitted ? member.revealCode : null,
         });
     } catch {
         return NextResponse.json({ error: 'Server error' }, { status: 500 });

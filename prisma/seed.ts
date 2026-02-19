@@ -7,440 +7,723 @@ const snippetsBySet: Record<string, Record<number, Record<string, string>>> = {
     A: {
         1: {
             c: `#include <stdio.h>
-int main() {
-    int arr[5] = {10, 20, 30, 40, 50};
-    int sum = 0;
-    for (int i = 0; i <= 5; i++) {  // Bug: off-by-one
-        sum += arr[i];
+
+int calculateEvenSum() {
+    int numbers[6] = {3, 4, 7, 10, 15, 8};
+    int totalSum = 0;
+    
+    for(int index = 0; index <= 6; index++) {
+        if(numbers[index] % 2 = 0) { 
+            totalSum += numbers[index]
+        }
     }
-    printf("Sum: %d\\n", sum);
+    
+    return totalSum;
+}
+
+int main() {
+    int result = calculateEvenSum();
+    printf("%d\\n", result)
     return 0;
 }`,
             java: `public class Main {
-    public static void main(String[] args) {
-        int[] arr = {10, 20, 30, 40, 50};
-        int sum = 0;
-        for (int i = 0; i <= arr.length; i++) {  // Bug: off-by-one
-            sum += arr[i];
+    public static int calculateEvenSum() {
+        int[] numbers = {3, 4, 7, 10, 15, 8};
+        int totalSum = 0;
+
+        for(int index = 0; index <= numbers.length; index++) { 
+            if(numbers[index] % 2 = 0) { 
+                totalSum += numbers[index];
+            }
         }
-        System.out.println("Sum: " + sum);
+
+        return totalSum
+    }
+
+    public static void main(String[] args) {
+        int result = calculateEvenSum();
+        System.out.println(result);
     }
 }`,
-            python: `arr = [10, 20, 30, 40, 50]
-sum = 0
-for i in range(6):  # Bug: off-by-one
-    sum += arr[i]
-print("Sum:", sum)`
+            python: `def calculate_even_sum():
+    numbers = [3, 4, 7, 10, 15, 8]
+    total_sum = 0
+    
+    for index in range(0, len(numbers)+1):  
+        if numbers[index] % 2 = 0:  
+            total_sum += numbers[index]
+    
+    return total_sum
+
+def main():
+    result = calculate_even_sum()
+    print result 
+
+if __name__ == "__main__":
+    main`
         },
         2: {
             c: `#include <stdio.h>
-int factorial(int n) {
-    if (n == 0) return 1;
-    return n * factorial(n);  // Bug: infinite recursion
+
+int reverseNumber() {
+    int number = 1234;
+    int reversed = 0
+    
+    while(number > 0) {
+        int digit = number % 10;
+        reversed = reversed + digit; 
+        number = number / 10
+    }
+    
+    return reversed;
 }
+
 int main() {
-    printf("Factorial of 5: %d\\n", factorial(5));
+    int result = reverseNumber();
+    printf("%d\\n", result);
     return 0;
 }`,
             java: `public class Main {
-    static int factorial(int n) {
-        if (n == 0) return 1;
-        return n * factorial(n);  // Bug: infinite recursion
+    public static int reverseNumber() {
+        int number = 1234;
+        int reversed = 0;
+
+        while(number > 0) {
+            int digit = number % 10;
+            reversed = reversed + digit; 
+            number = number / 10
+        }
+
+        return reversed;
     }
+
     public static void main(String[] args) {
-        System.out.println("Factorial of 5: " + factorial(5));
+        int result = reverseNumber();
+        system.out.println(result); 
     }
 }`,
-            python: `def factorial(n):
-    if n == 0:
-        return 1
-    return n * factorial(n)  # Bug: infinite recursion
+            python: `def reverse_number():
+    number = 1234
+    reversed = 0
+    
+    while number > 0
+        digit = number % 10
+        reversed = reversed + digit  
+        number = number // 10
+    
+    return reversed
 
-print("Factorial of 5:", factorial(5))`
+def main():
+    result = reverse_number()
+    print(result)
+
+if __name__ == "__main__":
+    main()`
         },
         3: {
             c: `#include <stdio.h>
-#include <string.h>
-int main() {
-    char str[] = "hello";
-    int len = strlen(str);
-    char reversed[6];
-    for (int i = 0; i < len; i++) {
-        reversed[i] = str[len - i];  // Bug: should be len-1-i
+
+int findMaximum() {
+    int numbers[5] = {12, 45, 7, 89, 23};
+    int maxValue = 0; 
+    
+    for(int i = 0; i < 5; i++) {
+        if(numbers[i] < maxValue) { 
+            maxValue = numbers[i]
+        }
     }
-    reversed[len] = '\\0';
-    printf("Reversed: %s\\n", reversed);
+    
+    return maxValue;
+}
+
+int main() {
+    int result = findMaximum();
+    printf("%d\\n", result);
     return 0;
 }`,
             java: `public class Main {
-    public static void main(String[] args) {
-        String str = "hello";
-        int len = str.length();
-        StringBuilder reversed = new StringBuilder();
-        for (int i = 0; i < len; i++) {
-            reversed.append(str.charAt(len - i));  // Bug: should be len-1-i
+    public static int findMaximum() {
+        int[] numbers = {12, 45, 7, 89, 23};
+        int maxValue = 0;
+
+        for(int i = 0; i < numbers.length; i++) {
+            if(numbers[i] < maxValue) {
+                maxValue = numbers[i]
+            }
         }
-        System.out.println("Reversed: " + reversed);
+
+        return maxValue;
+    }
+
+    public static void main(String[] args) {
+        int result = findMaximum();
+        System.out.println(result);
     }
 }`,
-            python: `text = "hello"
-length = len(text)
-reversed_str = ""
-for i in range(length):
-    reversed_str += text[length - i]  # Bug: should be length-1-i
-print("Reversed:", reversed_str)`
+            python: `def find_maximum():
+    numbers = [12, 45, 7, 89, 23]
+    max_value = 0
+
+    for i in range(0, len(numbers)):
+        if numbers[i] < max_value  
+            max_value = numbers[i]
+
+    return max_value
+
+def main():
+    result = find_maximum()
+    print(result)
+
+if __name__ == "__main__":
+    main()`
         }
     },
     B: {
         1: {
             c: `#include <stdio.h>
-int main() {
-    int n = 5;
-    for (int i = 1; i <= n; i++) {
-        for (int j = 1; j <= i; i++) {  // Bug: i++ should be j++
-            printf("* ");
-        }
-        printf("\\n");
+
+int calculateFactorial() {
+    int number = 5;
+    int factorial = 0;
+    
+    for(int counter = 1; counter <= number; counter++) {
+        factorial = factorial * counter
     }
-    return 0;
+    
+    return factorial;
+}
+
+int main() {
+    int result = calculateFactorial()();
+    printf("%d\\n", result);
+    return 0
 }`,
             java: `public class Main {
-    public static void main(String[] args) {
-        int n = 5;
-        for (int i = 1; i <= n; i++) {
-            for (int j = 1; j <= i; i++) {  // Bug: i++ should be j++
-                System.out.print("* ");
-            }
-            System.out.println();
+    public static int calculateFactorial() {
+        int number = 5;
+        int factorial = 0;
+
+        for(int counter = 1; counter <= number; counter++) {
+            factorial = factorial * counter
         }
+
+        return factorial;
+    }
+
+    public static void main(String[] args) {
+        int result = calculateFactorial()();
+        system.out.println(result);
     }
 }`,
-            python: `n = 5
-for i in range(1, n + 1):
-    for j in range(1, i + 1):
-        i += 1  # Bug: should not modify i
-        print("* ", end="")
-    print()`
+            python: `def calculate_factorial():
+    number = 5
+    factorial = 0
+    
+    for counter in range(1, number+1)
+        factorial = factorial * counter
+    
+    return factorial
+
+def main():
+    result = calculate_factorial()
+    print result
+
+if __name__ == "__main__":
+    main`
         },
         2: {
             c: `#include <stdio.h>
-int isPrime(int n) {
-    if (n < 2) return 0;
-    for (int i = 2; i < n; i++) {
-        if (n % i == 0) return 1;  // Bug: should return 0
+
+int countPositiveNumbers() {
+    int values[7] = {-3, 5, 0, 12, -8, 7, 4};
+    int positiveCount = 0;
+    
+    for(int index = 0; index <= 7; index++) {
+        if(values[index] >= 0) {
+            positiveCount =+ 1;
+        }
     }
-    return 0;  // Bug: should return 1
+    
+    return positiveCount
 }
+
 int main() {
-    for (int i = 1; i <= 20; i++) {
-        if (isPrime(i)) printf("%d ", i);
-    }
+    int result = countPositiveNumbers();
+    printf("%d\\n", result);
     return 0;
 }`,
             java: `public class Main {
-    static boolean isPrime(int n) {
-        if (n < 2) return false;
-        for (int i = 2; i < n; i++) {
-            if (n % i == 0) return true;  // Bug: should return false
+    public static int countPositiveNumbers() {
+        int[] values = {-3, 5, 0, 12, -8, 7, 4};
+        int positiveCount = 0;
+
+        for(int index = 0; index <= values.length; index++) {
+            if(values[index] >= 0) {
+                positiveCount =+ 1;
+            }
         }
-        return false;  // Bug: should return true
+
+        return positiveCount
     }
+
     public static void main(String[] args) {
-        for (int i = 1; i <= 20; i++) {
-            if (isPrime(i)) System.out.print(i + " ");
-        }
+        int result = countPositiveNumbers();
+        System.out.println(result);
     }
 }`,
-            python: `def is_prime(n):
-    if n < 2:
-        return False
-    for i in range(2, n):
-        if n % i == 0:
-            return True  # Bug: should return False
-    return False  # Bug: should return True
+            python: `def count_positive_numbers():
+    values = [-3, 5, 0, 12, -8, 7, 4]
+    positive_count = 0
+    
+    for index in range(0, len(values)+1):
+        if values[index] >= 0:
+            positive_count =+ 1
+    
+    return positive_count
 
-for i in range(1, 21):
-    if is_prime(i):
-        print(i, end=" ")`
+def main():
+    result = count_positive_numbers()
+    print(result)
+
+if __name__ == "__main__":
+    Main()`
         },
         3: {
             c: `#include <stdio.h>
-void bubbleSort(int arr[], int n) {
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {  // Bug: should be n-i-1
-            if (arr[j] > arr[j+1]) {
-                int temp = arr[j];
-                arr[j] = arr[j+1];
-                arr[j+1] = arr[j];  // Bug: should be temp
-            }
-        }
+
+int checkPalindrome() {
+    int number = 121;
+    int original = number;
+    int reversed = 0
+    
+    while(number > 0) {
+        int digit = number % 10;
+        reversed = reversed + digit;
+        number = number / 10;
+    }
+    
+    if(original = reversed) {
+        return 1;
+    } else {
+        return 0;
     }
 }
+
 int main() {
-    int arr[] = {5, 3, 8, 1, 2};
-    bubbleSort(arr, 5);
-    for (int i = 0; i < 5; i++) printf("%d ", arr[i]);
+    int result = checkPalindrome();
+    printf("%d\\n", result);
     return 0;
 }`,
             java: `public class Main {
-    static void bubbleSort(int[] arr) {
-        int n = arr.length;
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {  // Bug: should be n-i-1
-                if (arr[j] > arr[j+1]) {
-                    int temp = arr[j];
-                    arr[j] = arr[j+1];
-                    arr[j+1] = arr[j];  // Bug: should be temp
-                }
-            }
+    public static int checkPalindrome() {
+        int number = 121;
+        int original = number;
+        int reversed = 0;
+
+        while(number > 0) {
+            int digit = number % 10;
+            reversed = reversed + digit;
+            number = number / 10
+        }
+
+        if(original = reversed) {
+            return 1;
+        } else {
+            return 0;
         }
     }
+
     public static void main(String[] args) {
-        int[] arr = {5, 3, 8, 1, 2};
-        bubbleSort(arr);
-        for (int x : arr) System.out.print(x + " ");
+        int result = checkPalindrome();
+        System.out.println(result);
     }
 }`,
-            python: `def bubble_sort(arr):
-    n = len(arr)
-    for i in range(n):
-        for j in range(n):  # Bug: should be n-i-1
-            if arr[j] > arr[j+1]:
-                arr[j], arr[j+1] = arr[j+1], arr[j]  # Bug: index out of range
-    return arr
+            python: `def check_palindrome():
+    number = 121
+    original = number
+    reversed = 0
+    
+    while number > 0:
+        digit = number % 10
+        reversed = reversed + digit
+        number = number // 10
+    
+    if original = reversed:
+        return 1
+    else:
+        return 0
 
-arr = [5, 3, 8, 1, 2]
-print(bubble_sort(arr))`
+def main():
+    result = check_palindrome()
+    print(result)
+
+if __name__ == "__main__":
+    main()`
         }
     },
     C: {
         1: {
             c: `#include <stdio.h>
-int fibonacci(int n) {
-    if (n <= 0) return 0;
-    if (n == 1) return 1;
-    return fibonacci(n - 1) + fibonacci(n - 3);  // Bug: should be n-2
+
+int checkPrime() {
+    int number = 17;
+    int isPrime = 1
+    
+    if(number <= 1) {
+        return 0;
+    }
+
+    for(int divisor = 2; divisor < number; divisor++) {
+        if(number % divisor = 0) {
+            isPrime = 0;
+        }
+    }
+
+    return isPrime;
 }
+
 int main() {
-    for (int i = 0; i < 10; i++)
-        printf("%d ", fibonacci(i));
+    int result = checkPrime();
+    printf("%d\\n", result);
     return 0;
 }`,
             java: `public class Main {
-    static int fibonacci(int n) {
-        if (n <= 0) return 0;
-        if (n == 1) return 1;
-        return fibonacci(n - 1) + fibonacci(n - 3);  // Bug: should be n-2
+    public static int checkPrime() {
+        int number = 17;
+        int isPrime = 1
+
+        if(number <= 1) {
+            return 0;
+        }
+
+        for(int divisor = 2; divisor < number; divisor++) {
+            if(number % divisor = 0) {
+                isPrime = 0;
+            }
+        }
+
+        return isPrime;
     }
+
     public static void main(String[] args) {
-        for (int i = 0; i < 10; i++)
-            System.out.print(fibonacci(i) + " ");
+        int result = checkPrime()();
+        System.out.println(result);
     }
 }`,
-            python: `def fibonacci(n):
-    if n <= 0:
+            python: `def check_prime():
+    number = 17
+    is_prime = 1
+    
+    if number <= 1
         return 0
-    if n == 1:
-        return 1
-    return fibonacci(n - 1) + fibonacci(n - 3)  # Bug: should be n-2
+    
+    for divisor in range(2, number):
+        if number % divisor = 0:
+            is_prime = 0
+    
+    return is_prime
 
-for i in range(10):
-    print(fibonacci(i), end=" ")`
+def main():
+    result = check_prime()
+    print(result)
+
+if __name__ == "__main__":
+    main`
         },
         2: {
             c: `#include <stdio.h>
-int binarySearch(int arr[], int n, int target) {
-    int low = 0, high = n;  // Bug: should be n-1
-    while (low < high) {  // Bug: should be low <= high
-        int mid = (low + high) / 2;
-        if (arr[mid] == target) return mid;
-        else if (arr[mid] < target) low = mid;  // Bug: should be mid+1
-        else high = mid;  // Bug: should be mid-1
+
+float calculateAverage() {
+    int values[5] = {10, 20, 30, 40, 50};
+    int totalSum = 0;
+    
+    for(int index = 0; index <= 5; index++) {
+        totalSum += values[index];
     }
-    return -1;
+    
+    float average = totalSum / 5;
+    return average
 }
+
 int main() {
-    int arr[] = {2, 5, 8, 12, 16, 23, 38};
-    printf("Found at: %d\\n", binarySearch(arr, 7, 23));
+    float result = calculateAverage();
+    printf("%f\\n", result);
     return 0;
 }`,
             java: `public class Main {
-    static int binarySearch(int[] arr, int target) {
-        int low = 0, high = arr.length;  // Bug: should be length-1
-        while (low < high) {  // Bug: should be low <= high
-            int mid = (low + high) / 2;
-            if (arr[mid] == target) return mid;
-            else if (arr[mid] < target) low = mid;  // Bug: should be mid+1
-            else high = mid;  // Bug: should be mid-1
+    public static float calculateAverage() {
+        int[] values = {10, 20, 30, 40, 50};
+        int totalSum = 0;
+
+        for(int index = 0; index <= values.length; index++) {
+            totalSum += values[index];
         }
-        return -1;
+
+        float average = totalSum / 5
+        return average;
     }
+
     public static void main(String[] args) {
-        int[] arr = {2, 5, 8, 12, 16, 23, 38};
-        System.out.println("Found at: " + binarySearch(arr, 23));
+        float result = calculateAverage();
+        System.out.println(result);
     }
 }`,
-            python: `def binary_search(arr, target):
-    low, high = 0, len(arr)  # Bug: should be len(arr)-1
-    while low < high:  # Bug: should be low <= high
-        mid = (low + high) // 2
-        if arr[mid] == target:
-            return mid
-        elif arr[mid] < target:
-            low = mid  # Bug: should be mid+1
-        else:
-            high = mid  # Bug: should be mid-1
-    return -1
+            python: `def calculate_average():
+    values = [10, 20, 30, 40, 50]
+    total_sum = 0
+    
+    for index in range(0, len(values)+1):
+        total_sum += values[index]
+    
+    average = total_sum // 5
+    return average
 
-arr = [2, 5, 8, 12, 16, 23, 38]
-print("Found at:", binary_search(arr, 23))`
+def main():
+    result = calculate_average()
+    print(result)
+
+if __name__ == "__main__":
+    main()`
         },
         3: {
             c: `#include <stdio.h>
-int power(int base, int exp) {
-    int result = 0;  // Bug: should be 1
-    for (int i = 0; i < exp; i++) {
-        result += base;  // Bug: should be result *= base
+
+void generateFibonacci() {
+    int first = 0;
+    int second = 1;
+    int nextValue;
+    
+    printf("%d %d ", first, second)
+    
+    for(int counter = 2; counter <= 7; counter++) {
+        nextValue = first + second;
+        printf("%d ", nextValue);
+        first = second;
+        second = first;
     }
-    return result;
 }
+
 int main() {
-    printf("2^10 = %d\\n", power(2, 10));
+    generateFibonacci();
     return 0;
 }`,
             java: `public class Main {
-    static int power(int base, int exp) {
-        int result = 0;  // Bug: should be 1
-        for (int i = 0; i < exp; i++) {
-            result += base;  // Bug: should be result *= base
+    public static void generateFibonacci() {
+        int first = 0;
+        int second = 1;
+        int nextValue;
+
+        System.out.print(first + " " + second + " ")
+
+        for(int counter = 2; counter <= 7; counter++) {
+            nextValue = first + second;
+            System.out.print(nextValue + " ");
+            first = second;
+            second = first;
         }
-        return result;
     }
+
     public static void main(String[] args) {
-        System.out.println("2^10 = " + power(2, 10));
+        generateFibonacci();
     }
 }`,
-            python: `def power(base, exp):
-    result = 0  # Bug: should be 1
-    for i in range(exp):
-        result += base  # Bug: should be result *= base
-    return result
+            python: `def generate_fibonacci():
+    first = 0
+    second = 1
+    
+    print(first, second, end=" ")
+    
+    for counter in range(2, 8):
+        next_value = first + second
+        print(next_value, end=" ")
+        first = second
+        second = first
 
-print("2^10 =", power(2, 10))`
+def main():
+    generate_fibonacci()
+
+if __name__ == "__main__":
+    main()`
         }
     },
     D: {
         1: {
             c: `#include <stdio.h>
-int gcd(int a, int b) {
-    while (b != 0) {
-        int temp = b;
-        b = a % b;
-        a = b;  // Bug: should be a = temp
+
+int countDivisors() {
+    int number = 12;
+    int divisorCount = 0
+    
+    for(int divisor = 1; divisor < number; divisor++) {
+        if(number % divisor = 0) {
+            divisorCount =+ 1;
+        }
     }
-    return a;
+    
+    return divisorCount;
 }
+
 int main() {
-    printf("GCD of 48 and 18: %d\\n", gcd(48, 18));
+    int result = countDivisors()();
+    printf("%d\\n", result);
     return 0;
 }`,
             java: `public class Main {
-    static int gcd(int a, int b) {
-        while (b != 0) {
-            int temp = b;
-            b = a % b;
-            a = b;  // Bug: should be a = temp
+    public static int countDivisors() {
+        int number = 12;
+        int divisorCount = 0
+
+        for(int divisor = 1; divisor < number; divisor++) {
+            if(number % divisor = 0) {
+                divisorCount =+ 1;
+            }
         }
-        return a;
+
+        return divisorCount;
     }
+
     public static void main(String[] args) {
-        System.out.println("GCD of 48 and 18: " + gcd(48, 18));
+        int result = countDivisors()();
+        System.out.println(result);
     }
 }`,
-            python: `def gcd(a, b):
-    while b != 0:
-        temp = b
-        b = a % b
-        a = b  # Bug: should be a = temp
-    return a
+            python: `def count_divisors():
+    number = 12
+    divisor_count = 0
+    
+    for divisor in range(1, number):
+        if number % divisor = 0:
+            divisor_count =+ 1
+    
+    return divisor_count
 
-print("GCD of 48 and 18:", gcd(48, 18))`
+def main():
+    result = count_divisors()
+    print(result)
+
+if __name__ == "__main__":
+    main`
         },
         2: {
             c: `#include <stdio.h>
+
+int sumOfDigits() {
+    int number = 582;
+    int sum = 0
+    
+    while(number > 0) {
+        int digit = number % 10;
+        sum = sum * digit;
+        number = number / 10
+    }
+    
+    return sum;
+}
+
 int main() {
-    int matrix[3][3] = {{1,2,3},{4,5,6},{7,8,9}};
-    int transpose[3][3];
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            transpose[i][j] = matrix[i][j];  // Bug: should be matrix[j][i]
-        }
-    }
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++)
-            printf("%d ", transpose[i][j]);
-        printf("\\n");
-    }
+    int result = sumOfDigits();
+    printf("%d\\n", result);
     return 0;
 }`,
             java: `public class Main {
+    public static int sumOfDigits() {
+        int number = 582;
+        int sum = 0;
+
+        while(number > 0) {
+            int digit = number % 10;
+            sum = sum * digit;
+            number = number / 10
+        }
+
+        return sum;
+    }
+
     public static void main(String[] args) {
-        int[][] matrix = {{1,2,3},{4,5,6},{7,8,9}};
-        int[][] transpose = new int[3][3];
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                transpose[i][j] = matrix[i][j];  // Bug: should be matrix[j][i]
-            }
-        }
-        for (int[] row : transpose) {
-            for (int val : row) System.out.print(val + " ");
-            System.out.println();
-        }
+        int result = sumOfDigits();
+        System.out.println(result);
     }
 }`,
-            python: `matrix = [[1,2,3],[4,5,6],[7,8,9]]
-transpose = [[0]*3 for _ in range(3)]
-for i in range(3):
-    for j in range(3):
-        transpose[i][j] = matrix[i][j]  # Bug: should be matrix[j][i]
+            python: `def sum_of_digits():
+    number = 582
+    total = 0
+    
+    while number > 0
+        digit = number % 10
+        total = total * digit
+        number = number // 10
+    
+    return total
 
-for row in transpose:
-    print(*row)`
+def main():
+    result = sum_of_digits()
+    print(result)
+
+if __name__ == "__main__":
+    main()`
         },
         3: {
             c: `#include <stdio.h>
-int main() {
-    int arr[] = {3, 1, 4, 1, 5, 9, 2, 6};
-    int n = 8;
-    int max = arr[0];
-    int min = arr[0];
-    for (int i = 0; i < n; i++) {
-        if (arr[i] > max) max = arr[i];
-        if (arr[i] > min) min = arr[i];  // Bug: should be <
+
+int countEvenDigits() {
+    int number = 24681;
+    int evenCount = 0
+    
+    while(number > 0) {
+        int digit = number % 10;
+        if(digit % 2 = 0) {
+            evenCount =+ 1;
+        }
+        number = number / 10;
     }
-    printf("Max: %d, Min: %d\\n", max, min);
+    
+    return evenCount;
+}
+
+int main() {
+    int result = countEvenDigits();
+    printf("%d\\n", result);
     return 0;
 }`,
             java: `public class Main {
-    public static void main(String[] args) {
-        int[] arr = {3, 1, 4, 1, 5, 9, 2, 6};
-        int max = arr[0], min = arr[0];
-        for (int i = 0; i < arr.length; i++) {
-            if (arr[i] > max) max = arr[i];
-            if (arr[i] > min) min = arr[i];  // Bug: should be <
+    public static int countEvenDigits() {
+        int number = 24681;
+        int evenCount = 0
+
+        while(number > 0) {
+            int digit = number % 10;
+            if(digit % 2 = 0) {
+                evenCount =+ 1;
+            }
+            number = number / 10;
         }
-        System.out.println("Max: " + max + ", Min: " + min);
+
+        return evenCount;
+    }
+
+    public static void main(String[] args) {
+        int result = countEvenDigits();
+        System.out.println(result);
     }
 }`,
-            python: `arr = [3, 1, 4, 1, 5, 9, 2, 6]
-max_val = arr[0]
-min_val = arr[0]
-for x in arr:
-    if x > max_val:
-        max_val = x
-    if x > min_val:  # Bug: should be <
-        min_val = x
-print(f"Max: {max_val}, Min: {min_val}")`
+            python: `def count_even_digits():
+    number = 24681
+    even_count = 0
+    
+    while number > 0:
+        digit = number % 10
+        if digit % 2 = 0:
+            even_count =+ 1
+        number = number // 10
+    
+    return even_count
+
+def main():
+    result = count_even_digits()
+    print(result)
+
+if __name__ == "__main__":
+    main`
         }
     }
 };
@@ -455,24 +738,24 @@ const unlockKeys: Record<string, string> = {
 // Description for each snippet (same across all 3 languages for a given set + member)
 const snippetDescriptions: Record<string, Record<number, string>> = {
     A: {
-        1: '📌 Goal: Calculate the sum of all elements in an array of 5 integers [10, 20, 30, 40, 50]. The correct output should print "Sum: 150". Find and fix the bug to get the right result.',
-        2: '📌 Goal: Compute the factorial of 5 using recursion. The function should return 5! = 120, printing "Factorial of 5: 120". Find and fix the bug in the recursive call.',
-        3: '📌 Goal: Reverse the string "hello" and print the result. The correct output should be "Reversed: olleh". Find and fix the bug in the character indexing logic.'
+        1: '📌 You are given an integer array of size 6. Write a function that calculates the sum of all even numbers in the array. Fix the syntax errors and logical mistake.',
+        2: '📌 Given a positive integer 1234, write a function to reverse the digits of the number. Fix the syntax issues and logical error.',
+        3: '📌 Given an integer array, find the maximum element in the array. Fix the syntax and logical errors in the code.'
     },
     B: {
-        1: '📌 Goal: Print a right-angled triangle pattern of asterisks (*) with 5 rows. Row 1 has 1 star, row 2 has 2 stars, and so on. Find and fix the bug in the loop logic.',
-        2: '📌 Goal: Print all prime numbers between 1 and 20. The correct output should be: 2 3 5 7 11 13 17 19. Find and fix the bug in the prime-checking logic.',
-        3: '📌 Goal: Sort the array [5, 3, 8, 1, 2] in ascending order using Bubble Sort. The correct output should be "1 2 3 5 8". Find and fix the bugs in the sorting algorithm.'
+        1: '📌 You are given a positive integer n = 5. Write a function to compute the factorial of the number. Fix the syntax errors and logical mistake.',
+        2: '📌 Given an integer array, count how many numbers are strictly positive. Fix the syntax and logical errors.',
+        3: '📌 Given a positive integer 121, check whether it is a palindrome number. Return 1 if palindrome, 0 otherwise. Fix the syntax and logical errors.'
     },
     C: {
-        1: '📌 Goal: Print the first 10 Fibonacci numbers: 0 1 1 2 3 5 8 13 21 34. Find and fix the bug in the recursive formula.',
-        2: '📌 Goal: Use Binary Search to find the index of the number 23 in the sorted array [2, 5, 8, 12, 16, 23, 38]. The correct output should be "Found at: 5". Find and fix the bugs.',
-        3: '📌 Goal: Calculate 2 raised to the power 10 (2^10 = 1024) using a loop. The correct output should be "2^10 = 1024". Find and fix the bugs in the power function.'
+        1: '📌 You are given a positive integer n = 17. Write a function to check whether the number is prime. Return 1 if prime, 0 otherwise. Fix the syntax errors and logical mistake.',
+        2: '📌 Given an integer array, calculate the average of all elements as a floating-point value. Fix the syntax and logical errors.',
+        3: '📌 Generate the first 7 numbers of the Fibonacci sequence starting from 0 and 1. Fix the syntax and logical errors.'
     },
     D: {
-        1: '📌 Goal: Calculate the GCD (Greatest Common Divisor) of 48 and 18 using the Euclidean algorithm. The correct output should be "GCD of 48 and 18: 6". Find and fix the bug.',
-        2: '📌 Goal: Compute the transpose of a 3×3 matrix. The rows and columns should be swapped. Find and fix the bug in the transposition logic.',
-        3: '📌 Goal: Find the maximum and minimum values in the array [3, 1, 4, 1, 5, 9, 2, 6]. The correct output should be "Max: 9, Min: 1". Find and fix the bug in the comparison.'
+        1: '📌 You are given a positive integer n = 12. Write a function to count the total number of divisors. Fix the syntax errors and logical mistake.',
+        2: '📌 Given a positive integer n = 582, compute the sum of its digits. Fix the syntax and logical errors.',
+        3: '📌 Given a positive integer n = 24681, count how many even digits it contains. Fix the syntax and logical errors.'
     }
 };
 

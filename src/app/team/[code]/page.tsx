@@ -37,7 +37,7 @@ export default function TeamJoinPage() {
 
   useEffect(() => {
     fetchStatus();
-    const interval = setInterval(fetchStatus, 3000);
+    const interval = setInterval(fetchStatus, 5000);
     return () => clearInterval(interval);
   }, [fetchStatus]);
 
@@ -135,7 +135,7 @@ export default function TeamJoinPage() {
         </div>
 
         <p style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', marginTop: 28 }}>
-          ⟳ Page auto-refreshes every 3 seconds
+          ⟳ Page auto-refreshes every 5 seconds
         </p>
       </div>
     </div>

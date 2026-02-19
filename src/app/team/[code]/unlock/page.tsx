@@ -39,7 +39,7 @@ export default function UnlockPage() {
 
   useEffect(() => {
     fetchStatus();
-    const interval = setInterval(fetchStatus, 4000);
+    const interval = setInterval(fetchStatus, 5000);
     return () => clearInterval(interval);
   }, [fetchStatus]);
 
