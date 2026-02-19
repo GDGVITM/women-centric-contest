@@ -38,7 +38,10 @@ export async function POST(req: NextRequest) {
 
         const response = await fetch(PISTON_API, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': 'true'
+            },
             body: JSON.stringify({
                 language: langConfig.language,
                 version: langConfig.version,

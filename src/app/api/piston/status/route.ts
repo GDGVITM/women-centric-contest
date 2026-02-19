@@ -8,7 +8,8 @@ export async function GET() {
         const timeoutId = setTimeout(() => controller.abort(), 3000);
 
         const res = await fetch(`${pistonUrl}/runtimes`, { 
-            signal: controller.signal 
+            signal: controller.signal,
+            headers: { 'ngrok-skip-browser-warning': 'true' }
         });
         clearTimeout(timeoutId);
 
