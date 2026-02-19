@@ -44,7 +44,8 @@ export async function POST(req: NextRequest) {
                 isSubmitted: m.isSubmitted,
             })),
         });
-    } catch {
+    } catch (err) {
+        console.error('[Join API] Error:', err);
         return NextResponse.json({ error: 'Server error' }, { status: 500 });
     }
 }

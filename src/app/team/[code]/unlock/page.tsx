@@ -8,9 +8,9 @@ import {
   Check,
   X,
   Lock,
-  AlertTriangle,
   Loader2,
-  User,
+  Cpu,
+  ShieldCheck
 } from 'lucide-react';
 import { CONTEST_CONFIG } from '@/lib/config';
 
@@ -107,97 +107,58 @@ export default function UnlockPage({ params }: { params: Promise<{ code: string 
   const allSubmitted = members.length > 0 && members.every((m) => m.isSubmitted);
 
   return (
-    <div className="page-container-narrow" style={{ paddingTop: 60 }}>
+    <div className="container-narrow" style={{ paddingTop: 120 }}>
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        style={{ textAlign: 'center', marginBottom: 40 }}
+        style={{ textAlign: 'center', marginBottom: 60 }}
       >
-        <div className="badge badge-info" style={{ marginBottom: 16 }}>Team {code}</div>
-        <h1 style={{ fontSize: '2rem', marginBottom: 8 }}>
-          <span className="gradient-text-warm">Unlock Round 2</span>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 16 }}>
+             <ShieldCheck size={18} color="var(--gdg-blue)" />
+             <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>
+                SECURITY CHECKPOINT
+             </span>
+        </div>
+        
+        <h1 style={{ fontSize: '2.5rem', marginBottom: 12, fontFamily: 'var(--font-mono)' }}>
+          Enter <span className="text-gradient">Access Key</span>
         </h1>
-        <p style={{ color: 'var(--text-secondary)' }}>
-          All members must submit before entering the secret key.
+        <p style={{ color: 'var(--text-secondary)', maxWidth: 400, margin: '0 auto', lineHeight: 1.6 }}>
+           Combine the hidden fragments from each member's debug output to unlock the safe.
         </p>
       </motion.div>
 
-      {/* Member Status Cards */}
+      {/* Main Unlock Card */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: 12,
-          marginBottom: 40,
-          flexWrap: 'wrap',
-        }}
-      >
-        {members.map((m) => (
-          <div
-            key={m.memberNo}
-            className="glass-card"
-            style={{
-              padding: '12px 20px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-            }}
-          >
-            <User size={14} style={{ color: 'var(--text-muted)' }} />
-            <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>M{m.memberNo}</span>
-            {m.isSubmitted ? (
-              <Check size={14} style={{ color: 'var(--accent-success)' }} />
-            ) : (
-              <Loader2
-                size={14}
-                style={{ color: 'var(--accent-warning)', animation: 'spin 1s linear infinite' }}
-              />
-            )}
-          </div>
-        ))}
-      </motion.div>
-
-      {/* Key Input */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="glass-card"
-        style={{ padding: 40, maxWidth: 460, margin: '0 auto', textAlign: 'center' }}
+         initial={{ opacity: 0, y: 15 }}
+         animate={{ opacity: 1, y: 0 }}
+         transition={{ delay: 0.2 }}
+         className="glass-card"
+         style={{ maxWidth: 480, margin: '0 auto', padding: 40 }}
       >
         {success ? (
-          <motion.div
-            initial={{ scale: 0.5 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', damping: 12 }}
-          >
-            <Check size={56} style={{ color: 'var(--accent-success)', marginBottom: 12 }} />
-            <h3 style={{ color: 'var(--accent-success)' }}>Unlocked!</h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: 8 }}>
-              Redirecting to Round 2...
-            </p>
-          </motion.div>
+          <div style={{ textAlign: 'center', padding: '40px 0' }}>
+            <motion.div 
+               initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+               style={{ width: 80, height: 80, background: 'rgba(52, 168, 83, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', color: 'var(--gdg-green)' }}
+            >
+               <Check size={40} />
+            </motion.div>
+            <h3 style={{ fontSize: '1.5rem', marginBottom: 8 }}>Access Granted</h3>
+            <p style={{ color: 'var(--text-secondary)' }}>Decrypting Round 2 files...</p>
+          </div>
         ) : locked ? (
-          <div>
-            <Lock size={48} style={{ color: 'var(--accent-danger)', marginBottom: 12 }} />
-            <h3 style={{ color: 'var(--accent-danger)' }}>Locked Out</h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: 8 }}>
-              Maximum {CONTEST_CONFIG.maxUnlockAttempts} attempts reached. Contact an organizer.
+          <div style={{ textAlign: 'center', padding: '40px 0' }}>
+            <Lock size={48} style={{ color: 'var(--accent-danger)', margin: '0 auto 24px' }} />
+            <h3 style={{ color: 'var(--accent-danger)', marginBottom: 8 }}>System Locked</h3>
+            <p style={{ color: 'var(--text-secondary)' }}>
+              Too many failed attempts. Contact administrator.
             </p>
           </div>
         ) : (
           <>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 24 }}>
-              <KeyRound size={18} style={{ color: 'var(--accent-primary)' }} />
-              <span style={{ fontWeight: 600 }}>Enter the Secret Key</span>
-            </div>
-
-            {/* 6-Digit Input */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginBottom: 32 }}>
               {digits.map((d, i) => (
                 <input
                   key={i}
@@ -210,69 +171,66 @@ export default function UnlockPage({ params }: { params: Promise<{ code: string 
                   onKeyDown={(e) => handleKeyDown(i, e)}
                   disabled={!allSubmitted}
                   style={{
-                    width: 48,
-                    height: 56,
+                    width: 50, height: 64,
                     textAlign: 'center',
-                    fontSize: '1.5rem',
-                    fontWeight: 700,
-                    fontFamily: "'Space Grotesk', monospace",
-                    background: 'var(--bg-secondary)',
-                    border: `2px solid ${error ? 'var(--accent-danger)' : d ? 'var(--accent-primary)' : 'var(--border-default)'}`,
+                    fontSize: '1.8rem',
+                    fontWeight: 600,
+                    fontFamily: 'var(--font-mono)',
+                    background: 'var(--bg-tertiary)',
+                    border: error ? '1px solid var(--accent-danger)' : d ? '1px solid var(--accent-primary)' : '1px solid var(--border-default)',
                     borderRadius: 'var(--radius-md)',
-                    color: 'var(--text-primary)',
+                    color: 'white',
                     outline: 'none',
                     transition: 'all 0.2s',
+                    opacity: allSubmitted ? 1 : 0.5
                   }}
                 />
               ))}
             </div>
 
-            {/* Attempt Counter */}
-            {attempts > 0 && (
-              <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                marginBottom: 16, fontSize: '0.8rem', color: 'var(--accent-warning)',
-              }}>
-                <AlertTriangle size={12} />
-                {attempts}/{CONTEST_CONFIG.maxUnlockAttempts} attempts used
-              </div>
-            )}
-
             {error && (
-              <motion.p
-                initial={{ x: -5, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  color: 'var(--accent-danger)', fontSize: '0.85rem', marginBottom: 16,
-                }}
+              <motion.div 
+                initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: 'var(--accent-red)', fontSize: '0.9rem', marginBottom: 24 }}
               >
-                <X size={14} /> {error}
-              </motion.p>
+                 <X size={14} /> {error}
+              </motion.div>
             )}
 
             <button
-              className="btn-primary"
-              onClick={handleUnlock}
-              disabled={loading || !allSubmitted}
-              style={{ width: '100%', justifyContent: 'center' }}
+               className="btn-primary"
+               onClick={handleUnlock}
+               disabled={loading || !allSubmitted}
+               style={{ width: '100%', justifyContent: 'center', height: 48, fontSize: '1rem' }}
             >
-              {loading ? (
-                <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Checking...</>
-              ) : !allSubmitted ? (
-                <><Lock size={16} /> Waiting for all members</>
-              ) : (
-                <><KeyRound size={16} /> Unlock</>
-              )}
+               {loading ? <Loader2 className="spin" /> : !allSubmitted ? 'Waiting for teammates...' : 'Verify Access Key'}
             </button>
+            
+            {/* Status Indicators */}
+            <div style={{ marginTop: 32, display: 'flex', justifyContent: 'center', gap: 8 }}>
+               {members.map((m, i) => (
+                  <div key={i} style={{ 
+                     display: 'flex', alignItems: 'center', gap: 6, 
+                     padding: '6px 12px', borderRadius: '20px', 
+                     background: 'rgba(255,255,255,0.03)', 
+                     fontSize: '0.75rem', color: m.isSubmitted ? 'var(--gdg-green)' : 'var(--text-muted)' 
+                  }}>
+                     <div style={{ width: 6, height: 6, borderRadius: '50%', background: m.isSubmitted ? 'currentColor' : '#333' }} />
+                     Member {m.memberNo}
+                  </div>
+               ))}
+            </div>
+            
+            <div style={{ textAlign: 'center', marginTop: 16, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+               {attempts > 0 && `${attempts} / ${CONTEST_CONFIG.maxUnlockAttempts} attempts used`}
+            </div>
           </>
         )}
       </motion.div>
 
       <style jsx>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
       `}</style>
     </div>
   );

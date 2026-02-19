@@ -1,328 +1,247 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef, use } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef, use } from 'react';
+import Editor, { OnMount } from '@monaco-editor/react';
 import { motion } from 'motion/react';
-import dynamic from 'next/dynamic';
 import {
   Play,
-  RotateCcw,
   Send,
-  CheckCircle,
+  Loader2,
   Terminal,
   AlertCircle,
-  Loader2,
+  CheckCircle2,
+  Minimize2,
+  Maximize2,
+  Moon,
+  Sun
 } from 'lucide-react';
 import CountdownTimer from '@/components/CountdownTimer';
-
-const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
+import { CONTEST_CONFIG } from '@/lib/config';
+import { useRouter } from 'next/navigation';
 
 export default function MemberPage({ params }: { params: Promise<{ code: string; id: string }> }) {
   const { code, id } = use(params);
-  const memberNo = parseInt(id);
   const router = useRouter();
-
+  const editorRef = useRef<any>(null);
+  
   const [language, setLanguage] = useState('python');
-  const [snippet, setSnippet] = useState('');
-  const [editorCode, setEditorCode] = useState('');
+  const [sourceCode, setSourceCode] = useState('');
   const [output, setOutput] = useState('');
-  const [running, setRunning] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  
+  const [problemSet, setProblemSet] = useState('');
+  
+  // Timer state
   const [startedAt, setStartedAt] = useState<string | null>(null);
-  const [error, setError] = useState('');
-  const editorRef = useRef<unknown>(null);
 
-  const fetchSnippet = useCallback(async (lang: string) => {
-    try {
-      const res = await fetch(`/api/snippets?teamCode=${code}&memberNo=${memberNo}&language=${lang}`);
-      const data = await res.json();
-      if (res.ok) {
-        setSnippet(data.code);
-        setEditorCode(data.code);
-      }
-    } catch {
-      setError('Failed to load snippet');
-    }
-  }, [code, memberNo]);
-
-  // Fetch startedAt from team status
   useEffect(() => {
-    const fetchTimer = async () => {
-      try {
-        const res = await fetch(`/api/teams/${code}/status`);
-        const data = await res.json();
-        if (data.startedAt) setStartedAt(data.startedAt);
-      } catch {/* silent */}
+    // Determine language based on member ID
+    // M1: Python, M2: C, M3: Java/Cpp (simplified for demo)
+    const langMap: Record<string, string> = { '1': 'python', '2': 'c', '3': 'cpp' };
+    const defaultCode: Record<string, string> = {
+      python: `# Python 3.10\n# Fix the bug below:\n\ndef calculate_sum(arr):\n    return sum(arr)\n\nprint(calculate_sum([1, 2, 3]))`,
+      c: `// GCC 11.2\n#include <stdio.h>\n\nint main() {\n    printf("Hello World");\n    return 0;\n}`,
+      cpp: `// GCC 11.2\n#include <iostream>\n\nint main() {\n    std::cout << "Hello World";\n    return 0;\n}`
     };
-    fetchTimer();
-  }, [code]);
 
-  useEffect(() => {
-    fetchSnippet(language);
-  }, [language, fetchSnippet]);
+    const lang = langMap[id] || 'python';
+    setLanguage(lang);
+    
+    // Fetch initial snippet
+    fetch(`/api/snippets?code=${code}&member=${id}`)
+      .then(res => res.json())
+      .then(data => {
+         if(data.code) setSourceCode(data.code);
+         else setSourceCode(defaultCode[lang]);
+         setProblemSet(data.setName || 'Set A');
+      })
+      .catch(() => setSourceCode(defaultCode[lang]));
 
-  const getMonacoLanguage = (lang: string) => {
-    const map: Record<string, string> = { c: 'c', java: 'java', python: 'python' };
-    return map[lang] || 'plaintext';
+    // Fetch team start time for timer
+    fetch(`/api/teams/${code}/status`)
+      .then(res => res.json())
+      .then(data => {
+         if(data.startedAt) setStartedAt(data.startedAt);
+      });
+
+  }, [code, id]);
+
+  const handleEditorDidMount: OnMount = (editor) => {
+    editorRef.current = editor;
   };
 
-  const handleRun = async () => {
-    setError('');
-    setOutput('');
-    setRunning(true);
+  const runCode = async () => {
+    setIsRunning(true);
+    setOutput('Compiling and running...');
+    setStatus('idle');
+    
     try {
       const res = await fetch('/api/compile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ language, code: editorCode, stdin: '' }),
+        body: JSON.stringify({ language, code: sourceCode }),
       });
+      
       const data = await res.json();
-      if (!res.ok) {
-        setOutput(`Error: ${data.error}`);
+      
+      if (data.run && data.run.output) {
+        setOutput(data.run.output);
+        setStatus(data.run.code === 0 ? 'success' : 'error');
       } else {
-        const out = [];
-        if (data.compileOutput) out.push(`[Compile]\n${data.compileOutput}`);
-        if (data.stderr) out.push(`[Stderr]\n${data.stderr}`);
-        if (data.stdout) out.push(`[Output]\n${data.stdout}`);
-        if (out.length === 0) out.push('(No output)');
-        setOutput(out.join('\n\n'));
+        setOutput(data.message || 'Execution error');
+        setStatus('error');
       }
     } catch {
-      setOutput('Network error. Try again.');
+      setOutput('Network error regarding compiler service.');
+      setStatus('error');
     } finally {
-      setRunning(false);
+      setIsRunning(false);
     }
   };
 
-  const handleSubmit = async () => {
-    setError('');
-    setSubmitting(true);
+  const submitCode = async () => {
+    const confirmSubmit = window.confirm("Are you sure? Does your code pass all edge cases?");
+    if (!confirmSubmit) return;
+
+    setIsSubmitting(true);
     try {
       const res = await fetch('/api/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teamCode: code, memberNo, output }),
+        body: JSON.stringify({ teamCode: code, memberNo: parseInt(id), code: sourceCode }),
       });
+      
       const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || 'Submission failed');
-        setSubmitting(false);
-        return;
-      }
-      setSubmitted(true);
-    } catch {
-      setError('Network error. Try again.');
-      setSubmitting(false);
-    }
-  };
-
-  const handleReset = () => {
-    setEditorCode(snippet);
-    setOutput('');
-  };
-
-  const handleTimerExpired = () => {
-    if (!submitted) {
-      // Auto-submit with whatever output we have
-      handleSubmit();
-    }
-  };
-
-  const LANG_LABELS: Record<string, string> = { python: 'Python', c: 'C', java: 'Java' };
-
-  // ─── Submitted State ───
-  if (submitted) {
-    return (
-      <div className="page-container-narrow" style={{ paddingTop: 80, textAlign: 'center' }}>
-        <motion.div
-          initial={{ scale: 0.5, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: 'spring', damping: 15 }}
-          className="glass-card"
-          style={{ padding: 48 }}
-        >
-          <CheckCircle size={56} style={{ color: 'var(--accent-success)', marginBottom: 16 }} />
-          <h2 style={{ fontSize: '1.5rem', marginBottom: 8 }}>Output Submitted!</h2>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>
-            Your submission for Member {memberNo} is locked. Wait for all teammates to submit.
-          </p>
-          <button
-            className="btn-primary"
-            onClick={() => router.push(`/team/${code}/unlock`)}
-          >
-            Go to Unlock Page
-          </button>
-        </motion.div>
-      </div>
-    );
-  }
-
-  // ─── Editor View ───
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 64px)' }}>
-      {/* ─── Toolbar ─── */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '10px 20px',
-          background: 'var(--bg-secondary)',
-          borderBottom: '1px solid var(--border-subtle)',
-          flexWrap: 'wrap',
-          gap: 12,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <span className="badge badge-info">Team {code}</span>
-          <span className="badge badge-warning">Member {memberNo}</span>
-
-          {/* Language Tabs */}
-          <div style={{ display: 'flex', gap: 2, background: 'rgba(255,255,255,0.04)', borderRadius: 'var(--radius-sm)', padding: 2 }}>
-            {['python', 'c', 'java'].map((lang) => (
-              <button
-                key={lang}
-                onClick={() => setLanguage(lang)}
-                style={{
-                  padding: '6px 14px',
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  borderRadius: 6,
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  background: language === lang ? 'var(--accent-primary)' : 'transparent',
-                  color: language === lang ? 'white' : 'var(--text-secondary)',
-                }}
-              >
-                {LANG_LABELS[lang]}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <CountdownTimer startedAt={startedAt} onExpired={handleTimerExpired} />
-        </div>
-      </motion.div>
-
-      {/* ─── Main Area ─── */}
-      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 380px' }}>
-        {/* Editor Column */}
-        <div style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--border-subtle)' }}>
-          {/* Action bar */}
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '8px 16px', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border-subtle)',
-          }}>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              {LANG_LABELS[language]} Editor
-            </span>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn-secondary" onClick={handleReset} style={{ padding: '6px 12px', fontSize: '0.8rem' }}>
-                <RotateCcw size={14} /> Reset
-              </button>
-              <button className="btn-primary" onClick={handleRun} disabled={running} style={{ padding: '6px 16px', fontSize: '0.8rem' }}>
-                {running ? (
-                  <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Running</>
-                ) : (
-                  <><Play size={14} /> Run</>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Monaco */}
-          <div style={{ flex: 1, minHeight: 400 }}>
-            <MonacoEditor
-              height="100%"
-              language={getMonacoLanguage(language)}
-              value={editorCode}
-              onChange={(val) => setEditorCode(val || '')}
-              theme="vs-dark"
-              onMount={(editor) => { editorRef.current = editor; }}
-              options={{
-                fontSize: 14,
-                minimap: { enabled: false },
-                scrollBeyondLastLine: false,
-                padding: { top: 16 },
-                lineNumbers: 'on',
-                roundedSelection: true,
-                wordWrap: 'on',
-                automaticLayout: true,
-                fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Output Column */}
-        <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-secondary)' }}>
-          <div style={{
-            padding: '12px 16px', borderBottom: '1px solid var(--border-subtle)',
-            display: 'flex', alignItems: 'center', gap: 8,
-          }}>
-            <Terminal size={14} style={{ color: 'var(--accent-primary)' }} />
-            <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>Output Console</span>
-          </div>
-
-          <div style={{ flex: 1, padding: 16, overflow: 'auto' }}>
-            <pre style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: '0.8rem',
-              lineHeight: 1.6,
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
-              color: output.includes('Error') || output.includes('Stderr') ? 'var(--accent-danger)' : 'var(--text-primary)',
-              margin: 0,
-            }}>
-              {running ? (
-                <span style={{ color: 'var(--accent-primary)' }}>⏳ Compiling and running...</span>
-              ) : output ? (
-                output
-              ) : (
-                <span style={{ color: 'var(--text-muted)' }}>Click &quot;Run&quot; to see output here...</span>
-              )}
-            </pre>
-          </div>
-
-          {error && (
-            <div style={{
-              padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.85rem',
-              color: 'var(--accent-danger)', background: 'rgba(234,67,53,0.08)',
-            }}>
-              <AlertCircle size={14} /> {error}
-            </div>
-          )}
-
-          {/* Submit Area */}
-          <div style={{ padding: 16, borderTop: '1px solid var(--border-subtle)' }}>
-            <button
-              className="btn-primary"
-              onClick={handleSubmit}
-              disabled={submitting || !output}
-              style={{ width: '100%', padding: 14, justifyContent: 'center' }}
-            >
-              {submitting ? (
-                <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Submitting...</>
-              ) : (
-                <><Send size={16} /> Submit Output</>
-              )}
-            </button>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: 8, textAlign: 'center' }}>
-              ⚠ Submission is final and cannot be undone
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <style jsx>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
+      
+      if (res.ok) {
+        alert('Submitted successfully!');
+        
+        // Check if all submitted
+        if (data.allSubmitted) {
+           router.push(`/team/${code}/unlock`);
+        } else {
+           router.push(`/team/${code}`); // Back to dashboard
         }
+
+      } else {
+        alert('Error: ' + data.error);
+      }
+    } catch {
+      alert('Network error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div style={{ height: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column' }}>
+      
+      {/* Editor Toolbar */}
+      <div style={{
+         height: 60,
+         borderBottom: '1px solid var(--border-subtle)',
+         background: 'var(--bg-secondary)',
+         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+         padding: '0 24px'
+      }}>
+         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div className="badge badge-blue">Member 0{id}</div>
+            <div style={{ height: 24, width: 1, background: 'var(--border-subtle)' }} />
+            <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+               {language.toUpperCase()}
+            </span>
+            <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>•</span>
+            <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{problemSet}</span>
+         </div>
+
+         {/* Timer Component */}
+         {startedAt && (
+            <CountdownTimer 
+               startedAt={startedAt} 
+               durationMinutes={CONTEST_CONFIG.roundOneDurationMinutes}
+               onExpired={() => { alert('Time Up!'); submitCode(); }}
+            />
+         )}
+
+         <div style={{ display: 'flex', gap: 12 }}>
+            <button 
+               className="btn-secondary" 
+               onClick={runCode} 
+               disabled={isRunning}
+               style={{ minWidth: 100, justifyContent: 'center' }}
+            >
+               {isRunning ? <Loader2 size={16} className="spin" /> : <Play size={16} />} 
+               Run
+            </button>
+            <button 
+               className="btn-primary" 
+               onClick={submitCode} 
+               disabled={isSubmitting}
+               style={{ minWidth: 120, justifyContent: 'center' }}
+            >
+               {isSubmitting ? <Loader2 size={16} className="spin" /> : <Send size={16} />} 
+               Submit
+            </button>
+         </div>
+      </div>
+
+      {/* Main Split Pane */}
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1.4fr 1fr', overflow: 'hidden' }}>
+         
+         {/* Left: Code Editor */}
+         <div style={{ position: 'relative', borderRight: '1px solid var(--border-subtle)' }}>
+             <Editor
+               height="100%"
+               defaultLanguage={language}
+               language={language}
+               value={sourceCode}
+               onChange={(val) => setSourceCode(val || '')}
+               onMount={handleEditorDidMount}
+               theme="vs-dark"
+               options={{
+                  fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
+                  fontSize: 14,
+                  minimap: { enabled: false },
+                  scrollBeyondLastLine: false,
+                  padding: { top: 20 },
+                  lineNumbers: 'on',
+               }}
+            />
+         </div>
+
+         {/* Right: Output Console */}
+         <div style={{ background: '#0D0D0D', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ 
+               padding: '12px 20px', 
+               borderBottom: '1px solid var(--border-subtle)',
+               fontSize: '0.85rem',
+               fontWeight: 600,
+               color: 'var(--text-secondary)',
+               display: 'flex', alignItems: 'center', gap: 8
+            }}>
+               <Terminal size={14} /> CONSOLE
+            </div>
+            
+            <div style={{ 
+               flex: 1, 
+               padding: 24, 
+               fontFamily: "'Space Grotesk', monospace", 
+               fontSize: '0.9rem', 
+               color: status === 'error' ? '#ff6b6b' : '#a1a1aa',
+               whiteSpace: 'pre-wrap', 
+               overflowY: 'auto',
+               lineHeight: 1.6
+            }}>
+               {output || <span style={{ color: 'var(--text-muted)' }}>Ready to execute...</span>}
+            </div>
+         </div>
+      </div>
+      
+      <style jsx>{`
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
       `}</style>
     </div>
   );

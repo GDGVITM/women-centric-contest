@@ -3,189 +3,177 @@
 import { useState, useEffect, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
-import { User, Check, Lock, ArrowRight, Loader2 } from 'lucide-react';
+import {
+  User,
+  CheckCircle2,
+  Lock,
+  Loader2,
+  Code2,
+  Terminal,
+  ArrowRight,
+  ShieldAlert,
+} from 'lucide-react';
+import Link from 'next/link';
 
-interface MemberData {
-  memberNo: number;
-  isJoined: boolean;
-  isSubmitted: boolean;
-}
-
-export default function TeamHubPage({ params }: { params: Promise<{ code: string }> }) {
+export default function TeamPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = use(params);
   const router = useRouter();
-  const [members, setMembers] = useState<MemberData[]>([]);
-  const [teamStatus, setTeamStatus] = useState('');
-  const [setName, setSetName] = useState('');
-  const [joining, setJoining] = useState<number | null>(null);
-  const [error, setError] = useState('');
+  const [team, setTeam] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const fetchStatus = useCallback(async () => {
+  const fetchTeam = useCallback(async () => {
     try {
       const res = await fetch(`/api/teams/${code}/members`);
-      const data = await res.json();
-      if (data.members) {
-        setMembers(data.members);
-        setTeamStatus(data.status);
-        setSetName(data.setName);
+      if (!res.ok) {
+         if (res.status === 404) router.push('/');
+         return;
       }
+      const data = await res.json();
+      setTeam(data);
+
+      if (data.status === 'unlocking') router.push(`/team/${code}/unlock`);
+      if (data.status === 'round2') router.push(`/team/${code}/round2`);
+      if (data.status === 'completed') router.push(`/team/${code}/complete`);
+      
     } catch {
-      /* silent poll failure */
+      // silent
+    } finally {
+      setLoading(false);
     }
-  }, [code]);
+  }, [code, router]);
 
   useEffect(() => {
-    fetchStatus();
-    const interval = setInterval(fetchStatus, 3000);
+    fetchTeam();
+    const interval = setInterval(fetchTeam, 3000);
     return () => clearInterval(interval);
-  }, [fetchStatus]);
-
-  useEffect(() => {
-    if (teamStatus === 'unlocking') router.push(`/team/${code}/unlock`);
-    else if (teamStatus === 'round2') router.push(`/team/${code}/round2`);
-    else if (teamStatus === 'completed') router.push(`/team/${code}/complete`);
-  }, [teamStatus, code, router]);
+  }, [fetchTeam]);
 
   const handleJoin = async (memberNo: number) => {
-    setJoining(memberNo);
-    setError('');
     try {
       const res = await fetch(`/api/teams/${code}/members`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ memberNo }),
       });
-      const data = await res.json();
+      
       if (res.ok) {
         router.push(`/team/${code}/member/${memberNo}`);
       } else {
-        setError(data.error || 'Failed to join.');
-        await fetchStatus();
+        alert('Slot unavailable');
+        fetchTeam();
       }
     } catch {
-      setError('Network error.');
-    } finally {
-      setJoining(null);
+      alert('Network error');
     }
   };
 
-  const getMemberState = (m: MemberData) => {
-    if (m.isSubmitted) return 'submitted';
-    if (m.isJoined) return 'active';
-    return 'available';
-  };
-
-  const stateConfig = {
-    available: {
-      icon: User,
-      badge: 'Available',
-      badgeClass: 'badge-success',
-      color: 'var(--accent-success)',
-    },
-    active: {
-      icon: Loader2,
-      badge: 'In Progress',
-      badgeClass: 'badge-warning',
-      color: 'var(--accent-warning)',
-    },
-    submitted: {
-      icon: Check,
-      badge: 'Submitted',
-      badgeClass: 'badge-info',
-      color: 'var(--accent-primary)',
-    },
-  };
+  if (loading) return null;
 
   return (
-    <div className="page-container-narrow" style={{ paddingTop: 60 }}>
+    <div className="container-narrow" style={{ paddingTop: 100, paddingBottom: 60 }}>
+      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        style={{ textAlign: 'center', marginBottom: 48 }}
+        style={{ marginBottom: 40, textAlign: 'center' }}
       >
-        <div className="badge badge-info" style={{ marginBottom: 16 }}>
-          Team {code} · Set {setName || '...'}
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+           <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--gdg-green)', boxShadow: '0 0 10px var(--gdg-green)' }} />
+           <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>LIVE SESSION</span>
         </div>
-        <h1 style={{ fontSize: '2rem', marginBottom: 8 }}>Select Your Slot</h1>
-        <p style={{ color: 'var(--text-secondary)' }}>
-          Choose a member slot to begin debugging. Each member gets a unique code challenge.
-        </p>
+        
+        <h1 style={{ fontSize: '2.5rem', marginBottom: 8, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
+          Team <span className="text-gradient">{team?.teamCode}</span>
+        </h1>
+        <p style={{ color: 'var(--text-secondary)' }}>Select your slot to begin Round 1.</p>
       </motion.div>
 
-      <div style={{ display: 'grid', gap: 16, maxWidth: 480, margin: '0 auto' }}>
-        {members.map((m, i) => {
-          const state = getMemberState(m);
-          const config = stateConfig[state];
-          const StateIcon = config.icon;
-          const isAvailable = state === 'available';
+      {/* Slots Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 24 }}>
+        {[1, 2, 3].map((num, i) => {
+          const member = team?.members.find((m: any) => m.memberNo === num);
+          const isTaken = member?.isJoined;
+          const isDone = member?.isSubmitted;
 
           return (
             <motion.div
-              key={m.memberNo}
-              initial={{ opacity: 0, y: 15 }}
+              key={num}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 + i * 0.1 }}
-              className="glow-card"
-              onClick={() => isAvailable && handleJoin(m.memberNo)}
+              transition={{ delay: i * 0.1 }}
+              className="glass-card"
               style={{
                 padding: 24,
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'space-between',
-                cursor: isAvailable ? 'pointer' : 'default',
-                opacity: !isAvailable ? 0.7 : 1,
+                textAlign: 'center',
+                position: 'relative',
+                opacity: isTaken && !isDone ? 0.7 : 1
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <div
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 12,
-                    background: `${config.color}15`,
-                    border: `1px solid ${config.color}30`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <StateIcon size={20} style={{ color: config.color }} />
-                </div>
-                <div>
-                  <p style={{ fontWeight: 600, fontSize: '1rem' }}>Member {m.memberNo}</p>
-                  <div className={`badge ${config.badgeClass}`} style={{ marginTop: 4 }}>
-                    {config.badge}
-                  </div>
-                </div>
+              <div style={{
+                width: 56, height: 56,
+                borderRadius: '16px',
+                background: isDone 
+                  ? 'rgba(52, 168, 83, 0.1)' 
+                  : isTaken 
+                    ? 'rgba(255, 255, 255, 0.05)'
+                    : 'rgba(66, 133, 244, 0.1)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                marginBottom: 16,
+                color: isDone ? 'var(--gdg-green)' : isTaken ? 'var(--text-muted)' : 'var(--gdg-blue)'
+              }}>
+                {isDone ? <CheckCircle2 size={24} /> : isTaken ? <User size={24} /> : <Terminal size={24} />}
               </div>
 
-              {isAvailable && joining !== m.memberNo && (
-                <ArrowRight size={18} style={{ color: 'var(--text-muted)' }} />
+              <h3 style={{ fontSize: '1.2rem', marginBottom: 4 }}>Member 0{num}</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: 20 }}>
+                {isDone ? 'Submitted' : isTaken ? 'Working...' : 'Available'}
+              </p>
+
+              {isDone ? (
+                <div className="badge badge-green" style={{ width: '100%', justifyContent: 'center' }}>Completed</div>
+              ) : isTaken ? (
+                <button 
+                  className="btn-secondary" 
+                  disabled 
+                  style={{ width: '100%', justifyContent: 'center', opacity: 0.5 }}
+                >
+                  <Loader2 size={14} className="spin" /> In Progress
+                </button>
+              ) : (
+                <button
+                  className="btn-primary"
+                  onClick={() => handleJoin(num)}
+                  style={{ width: '100%', justifyContent: 'center' }}
+                >
+                  Join Slot <ArrowRight size={14} />
+                </button>
               )}
-              {joining === m.memberNo && (
-                <Loader2 size={18} style={{ color: 'var(--accent-primary)', animation: 'spin 1s linear infinite' }} />
-              )}
-              {!isAvailable && <Lock size={16} style={{ color: 'var(--text-muted)' }} />}
             </motion.div>
           );
         })}
       </div>
 
-      {error && (
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          style={{ textAlign: 'center', color: 'var(--accent-danger)', marginTop: 16, fontSize: '0.9rem' }}
-        >
-          {error}
-        </motion.p>
-      )}
+      {/* Status Footer */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        style={{ marginTop: 60, textAlign: 'center' }}
+      >
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, padding: '12px 24px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+             <ShieldAlert size={16} color="var(--gdg-yellow)" />
+             <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                Solve the bugs to unlock the Round 2 cipher.
+             </span>
+        </div>
+      </motion.div>
 
       <style jsx>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
+        .spin { animation: spin 2s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
       `}</style>
     </div>
   );

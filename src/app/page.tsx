@@ -3,57 +3,30 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
-import {
-  Code2,
-  Users,
-  KeyRound,
-  Trophy,
-  ArrowRight,
-  Bug,
-  Zap,
-  Shield,
+import { 
+  ArrowRight, 
+  Terminal, 
+  Cpu, 
+  ShieldCheck, 
+  Zap, 
+  Code2, 
+  Globe 
 } from 'lucide-react';
 import { CONTEST_CONFIG } from '@/lib/config';
-
-const CONTEST_STEPS = [
-  {
-    icon: Users,
-    title: 'Join Your Team',
-    description: 'Enter your team code and pick a member slot.',
-    color: CONTEST_CONFIG.colors.blue,
-  },
-  {
-    icon: Bug,
-    title: 'Debug the Code',
-    description: `Find and fix bugs in ${CONTEST_CONFIG.roundOneDurationMinutes} minutes across C, Java, or Python.`,
-    color: CONTEST_CONFIG.colors.red,
-  },
-  {
-    icon: KeyRound,
-    title: 'Unlock Round 2',
-    description: 'Once all members submit, enter the secret key together.',
-    color: CONTEST_CONFIG.colors.yellow,
-  },
-  {
-    icon: Trophy,
-    title: 'Submit & Win',
-    description: 'Collaborate on a final solution and submit your work.',
-    color: CONTEST_CONFIG.colors.green,
-  },
-];
+import Scene3D from '@/components/Scene3D';
+import { Canvas } from '@react-three/fiber';
 
 export default function LandingPage() {
+  const router = useRouter();
   const [teamCode, setTeamCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
-  const handleStart = async () => {
+  const handleJoin = async () => {
     if (!teamCode.trim()) {
-      setError('Please enter your team code.');
+      setError('Please enter a team code.');
       return;
     }
-
     setLoading(true);
     setError('');
 
@@ -61,231 +34,254 @@ export default function LandingPage() {
       const res = await fetch('/api/teams/join', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teamCode: teamCode.toUpperCase().trim() }),
+        body: JSON.stringify({ teamCode }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || 'Something went wrong.');
+        setError(data.error || 'Failed to join.');
+        setLoading(false);
         return;
       }
 
       router.push(`/team/${data.teamCode}`);
     } catch {
       setError('Network error. Please try again.');
-    } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="page-container" style={{ paddingTop: 60, paddingBottom: 60 }}>
-      {/* ─── Hero Section ─── */}
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        style={{ textAlign: 'center', maxWidth: 680, margin: '0 auto', marginBottom: 80 }}
-      >
-        {/* GDG Tag */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1, duration: 0.4 }}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '6px 16px',
-            borderRadius: 9999,
-            background: 'rgba(255, 255, 255, 0.04)',
-            border: '1px solid var(--border-subtle)',
-            marginBottom: 24,
-            fontSize: '0.8rem',
-            color: 'var(--text-secondary)',
-          }}
-        >
-          <div style={{ display: 'flex', gap: 3 }}>
-            {Object.values(CONTEST_CONFIG.colors).map((c) => (
-              <div key={c} style={{ width: 6, height: 6, borderRadius: '50%', background: c }} />
-            ))}
-          </div>
-          <span>{CONTEST_CONFIG.organizer}</span>
-        </motion.div>
+    <div style={{ overflowX: 'hidden' }}>
+      
+      {/* Hero Section */}
+      <section style={{ 
+        minHeight: '85vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        position: 'relative',
+        paddingTop: 80 
+      }}>
+        <div className="container-wide" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 40, alignItems: 'center' }}>
+          
+          {/* Left: Text Content */}
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <div className="badge badge-blue" style={{ marginBottom: 24, fontSize: '0.8rem' }}>
+              <Zap size={12} style={{ marginRight: 6 }} /> 
+              {CONTEST_CONFIG.tagline}
+            </div>
+            
+            <h1 style={{ 
+              fontSize: '4.5rem', 
+              lineHeight: 1, 
+              letterSpacing: '-0.03em', 
+              fontWeight: 700,
+              marginBottom: 24,
+              fontFamily: 'var(--font-mono)'
+            }}>
+              Break the <br />
+              <span className="text-gradient-gdg">Loop.</span>
+            </h1>
 
-        {/* Title */}
-        <motion.h1
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)', marginBottom: 16 }}
-        >
-          <span className="gradient-text">{CONTEST_CONFIG.name}</span>
-        </motion.h1>
+            <p style={{ 
+              fontSize: '1.2rem', 
+              color: 'var(--text-secondary)', 
+              maxWidth: 480, 
+              lineHeight: 1.6,
+              marginBottom: 40 
+            }}>
+              An immersive debugging marathon. Fix the bugs, crack the cipher, and build the future of women safety.
+            </p>
 
-        {/* Tagline */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.35 }}
-          style={{
-            fontSize: '1.15rem',
-            color: 'var(--text-secondary)',
-            marginBottom: 40,
-            lineHeight: 1.6,
-          }}
-        >
-          {CONTEST_CONFIG.tagline}
-          <br />
-          <span style={{ fontSize: '0.95rem' }}>
-            A team-based debugging competition — find bugs, crack codes, and build solutions.
-          </span>
-        </motion.p>
-
-        {/* Team Code Input */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.45 }}
-          className="glass-card"
-          style={{
-            padding: 32,
-            maxWidth: 420,
-            margin: '0 auto',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-            <Shield size={16} style={{ color: 'var(--accent-primary)' }} />
-            <label style={{ fontWeight: 600, fontSize: '0.9rem' }}>Team Code</label>
-          </div>
-
-          <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
-            <input
-              type="text"
-              className="input-field"
-              placeholder="e.g. T01"
-              value={teamCode}
-              onChange={(e) => {
-                setTeamCode(e.target.value.toUpperCase());
-                setError('');
-              }}
-              onKeyDown={(e) => e.key === 'Enter' && handleStart()}
-              maxLength={5}
-              style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}
-            />
-            <button
-              className="btn-primary"
-              onClick={handleStart}
-              disabled={loading}
-              style={{ whiteSpace: 'nowrap' }}
-            >
-              {loading ? (
-                <Zap size={16} style={{ animation: 'pulse-glow 1s infinite' }} />
-              ) : (
-                <>
-                  Start <ArrowRight size={16} />
-                </>
-              )}
-            </button>
-          </div>
-
-          {error && (
-            <motion.p
-              initial={{ opacity: 0, x: -5 }}
-              animate={{ opacity: 1, x: 0 }}
-              style={{ color: 'var(--accent-danger)', fontSize: '0.85rem' }}
-            >
-              {error}
-            </motion.p>
-          )}
-        </motion.div>
-      </motion.section>
-
-      {/* ─── How It Works ─── */}
-      <motion.section
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.6 }}
-        style={{ maxWidth: 900, margin: '0 auto' }}
-      >
-        <h2
-          style={{
-            textAlign: 'center',
-            fontSize: '1.5rem',
-            marginBottom: 40,
-            color: 'var(--text-secondary)',
-          }}
-        >
-          How It Works
-        </h2>
-
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: 16,
-          }}
-        >
-          {CONTEST_STEPS.map((step, i) => (
-            <motion.div
-              key={step.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 + i * 0.1 }}
-              className="glow-card"
-              style={{ padding: 24, textAlign: 'center' }}
-            >
-              <div
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 12,
-                  background: `${step.color}15`,
-                  border: `1px solid ${step.color}30`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 16px',
+            {/* Input Group */}
+            <div style={{ 
+              display: 'flex', 
+              gap: 12, 
+              maxWidth: 420,
+              background: 'rgba(255,255,255,0.03)',
+              padding: 6,
+              borderRadius: '12px',
+              border: '1px solid var(--border-subtle)'
+            }}>
+              <input
+                type="text"
+                placeholder="Enter Team Code (e.g. T01)"
+                value={teamCode}
+                onChange={(e) => {
+                  setTeamCode(e.target.value.toUpperCase());
+                  setError('');
                 }}
+                onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  flex: 1,
+                  padding: '0 16px',
+                  color: 'white',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '1rem',
+                  outline: 'none'
+                }}
+              />
+              <button 
+                className="btn-primary" 
+                onClick={handleJoin} 
+                disabled={loading}
+                style={{ padding: '12px 24px', borderRadius: '8px' }}
               >
-                <step.icon size={22} style={{ color: step.color }} />
+                {loading ? ' joining...' : 'Start'} <ArrowRight size={16} />
+              </button>
+            </div>
+            
+            {error && (
+              <motion.p 
+                initial={{ opacity: 0, y: 5 }} 
+                animate={{ opacity: 1, y: 0 }}
+                style={{ color: 'var(--accent-red)', marginTop: 12, fontSize: '0.9rem', paddingLeft: 8 }}
+              >
+                {error}
+              </motion.p>
+            )}
+          </motion.div>
+
+          {/* Right: 3D Scene */}
+          <div style={{ height: 600, width: '100%', position: 'relative' }}>
+             <Canvas gl={{ alpha: true, antialias: true }} dpr={[1, 2]}>
+                <Scene3D />
+             </Canvas>
+          </div>
+        </div>
+      </section>
+
+      {/* Bento Grid Features */}
+      <section style={{ padding: '80px 0', borderTop: '1px solid var(--border-subtle)' }}>
+        <div className="container-wide">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            style={{ marginBottom: 40 }}
+          >
+            <h2 style={{ fontSize: '2rem', marginBottom: 16 }}>How to play</h2>
+            <p style={{ color: 'var(--text-secondary)' }}>Follow the steps to complete the challenge.</p>
+          </motion.div>
+          
+          <div className="bento-grid">
+            {/* Card 1 */}
+            <motion.div 
+              className="bento-card"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+            >
+              <div style={{ 
+                width: 40, height: 40, 
+                borderRadius: '8px', 
+                background: 'rgba(66, 133, 244, 0.1)', 
+                color: 'var(--gdg-blue)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                marginBottom: 20
+              }}>
+                <Terminal size={20} />
               </div>
-              <h3 style={{ fontSize: '0.95rem', marginBottom: 8 }}>{step.title}</h3>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                {step.description}
+              <h3 style={{ fontSize: '1.2rem', marginBottom: 8 }}>1. Debug</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.6 }}>
+                Analyze the provided buggy code snippet. Fix syntax and logical errors within the 30-minute timer.
               </p>
             </motion.div>
-          ))}
-        </div>
-      </motion.section>
 
-      {/* ─── Tech Bar ─── */}
-      <motion.section
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1 }}
-        style={{
-          textAlign: 'center',
-          marginTop: 60,
-          color: 'var(--text-muted)',
-          fontSize: '0.8rem',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Code2 size={14} /> C
-          </span>
-          <span style={{ width: 1, height: 14, background: 'var(--border-subtle)' }} />
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Code2 size={14} /> Java
-          </span>
-          <span style={{ width: 1, height: 14, background: 'var(--border-subtle)' }} />
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Code2 size={14} /> Python
-          </span>
+            {/* Card 2 */}
+            <motion.div 
+               className="bento-card"
+               initial={{ opacity: 0, y: 20 }}
+               whileInView={{ opacity: 1, y: 0 }}
+               viewport={{ once: true }}
+               transition={{ delay: 0.2 }}
+            >
+              <div style={{ 
+                width: 40, height: 40, 
+                borderRadius: '8px', 
+                background: 'rgba(52, 168, 83, 0.1)', 
+                color: 'var(--gdg-green)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                marginBottom: 20
+              }}>
+                <Cpu size={20} />
+              </div>
+              <h3 style={{ fontSize: '1.2rem', marginBottom: 8 }}>2. Execute</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.6 }}>
+                Run your code against hidden test cases. Ensure memory and time limits are respected.
+              </p>
+            </motion.div>
+
+            {/* Card 3 */}
+            <motion.div 
+               className="bento-card"
+               initial={{ opacity: 0, y: 20 }}
+               whileInView={{ opacity: 1, y: 0 }}
+               viewport={{ once: true }}
+               transition={{ delay: 0.3 }}
+            >
+              <div style={{ 
+                width: 40, height: 40, 
+                borderRadius: '8px', 
+                background: 'rgba(251, 188, 4, 0.1)', 
+                color: 'var(--gdg-yellow)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                marginBottom: 20
+              }}>
+                <ShieldCheck size={20} />
+              </div>
+              <h3 style={{ fontSize: '1.2rem', marginBottom: 8 }}>3. Unlock</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.6 }}>
+                When all 3 team members submit, the safe unlocks. Enter the combined key to verify.
+              </p>
+            </motion.div>
+
+            {/* Card 4 */}
+            <motion.div 
+               className="bento-card"
+               initial={{ opacity: 0, y: 20 }}
+               whileInView={{ opacity: 1, y: 0 }}
+               viewport={{ once: true }}
+               transition={{ delay: 0.4 }}
+            >
+              <div style={{ 
+                width: 40, height: 40, 
+                borderRadius: '8px', 
+                background: 'rgba(234, 67, 53, 0.1)', 
+                color: 'var(--gdg-red)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                marginBottom: 20
+              }}>
+                <Code2 size={20} />
+              </div>
+              <h3 style={{ fontSize: '1.2rem', marginBottom: 8 }}>4. Build</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.6 }}>
+                Round 2: Collaborative development. Build a solution for the revealed problem statement.
+              </p>
+            </motion.div>
+
+          </div>
         </div>
-      </motion.section>
+      </section>
+
+      {/* Footer CTA */}
+      <section style={{ padding: '60px 0 100px', textAlign: 'center' }}>
+         <h2 style={{ fontSize: '1.5rem', fontWeight: 500 }}>Ready to break the loop?</h2>
+         <div style={{ marginTop: 24, display: 'flex', justifyContent: 'center', gap: 12 }}>
+             <a href={CONTEST_CONFIG.orgUrl} target="_blank" className="btn-secondary">
+               <Globe size={16} /> Visit GDG Website
+             </a>
+         </div>
+      </section>
+
     </div>
   );
 }
