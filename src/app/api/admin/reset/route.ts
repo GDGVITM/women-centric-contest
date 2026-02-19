@@ -5,14 +5,35 @@ export async function POST(req: NextRequest) {
     try {
         const { teamCode } = await req.json();
         
+        // Explicitly delete related records check-safe
+        await prisma.keyAttempt.deleteMany({
+            where: { team: { teamCode } }
+        });
+
+        await prisma.round2Submission.deleteMany({
+            where: { team: { teamCode } }
+        });
+
         // Reset Team Data
-        await prisma.team.update({
+        const team = await prisma.team.update({
             where: { teamCode: teamCode },
             data: {
-                status: 'round1',
-                startedAt: null, // Reset timer
-                keyAttempts: { deleteMany: {} },
-                round2Submission: { delete: true },
+                status: 'waiting', 
+                startedAt: null,
+                currentRound: 1,   
+            }
+        });
+
+        // Reset Members
+        await prisma.member.updateMany({
+            where: { teamId: team.id },
+            data: {
+                isJoined: false,
+                isSubmitted: false,
+                output: null,
+                submittedCode: null,
+                submittedAt: null,
+                joinedAt: null
             }
         });
 
