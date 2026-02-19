@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { CONTEST_CONFIG } from '@/lib/config';
 
 export async function POST(
     req: NextRequest,
@@ -26,6 +27,19 @@ export async function POST(
             return NextResponse.json({ error: 'Not all members have submitted yet.' }, { status: 403 });
         }
 
+        // Rate limit: check existing attempts
+        const attemptCount = await prisma.keyAttempt.count({
+            where: { teamId: team.id },
+        });
+
+        if (attemptCount >= CONTEST_CONFIG.maxUnlockAttempts) {
+            return NextResponse.json({
+                error: `Maximum ${CONTEST_CONFIG.maxUnlockAttempts} attempts reached. Contact an organizer.`,
+                locked: true,
+                attempts: attemptCount,
+            }, { status: 429 });
+        }
+
         const isCorrect = key === team.set.unlockKey;
 
         // Record attempt
@@ -46,16 +60,12 @@ export async function POST(
             return NextResponse.json({ success: true, unlocked: true });
         }
 
-        // Count total attempts
-        const attemptCount = await prisma.keyAttempt.count({
-            where: { teamId: team.id },
-        });
-
         return NextResponse.json({
             success: false,
             unlocked: false,
             message: 'Incorrect key. Try again.',
-            attempts: attemptCount,
+            attempts: attemptCount + 1,
+            maxAttempts: CONTEST_CONFIG.maxUnlockAttempts,
         });
     } catch {
         return NextResponse.json({ error: 'Server error' }, { status: 500 });

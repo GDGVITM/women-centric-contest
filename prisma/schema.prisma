@@ -32,6 +32,7 @@ model Team {
   teamCode          String             @unique // T01-T20
   setId             Int
   status            String             @default("waiting") // waiting, round1, unlocking, round2, completed
+  startedAt         DateTime?          // When Round 1 timer started
   createdAt         DateTime           @default(now())
   set               Set                @relation(fields: [setId], references: [id])
   members           Member[]

@@ -11,9 +11,17 @@ export async function GET(
         const team = await prisma.team.findUnique({
             where: { teamCode: code },
             include: {
-                members: { orderBy: { memberNo: 'asc' } },
+                members: {
+                    orderBy: { memberNo: 'asc' },
+                    select: {
+                        memberNo: true,
+                        isJoined: true,
+                        isSubmitted: true,
+                        // output intentionally excluded — data leak prevention
+                    },
+                },
                 set: true,
-                round2Submission: true,
+                round2Submission: { select: { id: true } },
             },
         });
 
@@ -25,12 +33,8 @@ export async function GET(
             teamCode: team.teamCode,
             setName: team.set.name,
             status: team.status,
-            members: team.members.map((m) => ({
-                memberNo: m.memberNo,
-                isJoined: m.isJoined,
-                isSubmitted: m.isSubmitted,
-                output: m.output,
-            })),
+            startedAt: team.startedAt,
+            members: team.members,
             hasRound2Submission: !!team.round2Submission,
         });
     } catch {

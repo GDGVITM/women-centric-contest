@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { CONTEST_CONFIG } from '@/lib/config';
 
-// Local Piston instance (Docker) — default port 2000
-const PISTON_API = process.env.PISTON_API_URL || 'http://localhost:2000/api/v2/execute';
+const PISTON_API = process.env.PISTON_API_URL || 'http://127.0.0.1:2000/api/v2/execute';
 
 const LANGUAGE_MAP: Record<string, { language: string; version: string }> = {
     c: { language: 'c', version: '*' },
     java: { language: 'java', version: '*' },
     python: { language: 'python', version: '*' },
+};
+
+const FILENAMES: Record<string, string> = {
+    c: 'main.c',
+    java: 'Main.java',
+    python: 'main.py',
 };
 
 export async function POST(req: NextRequest) {
@@ -17,16 +23,18 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Language and code are required.' }, { status: 400 });
         }
 
+        // Code size limit
+        if (new TextEncoder().encode(code).length > CONTEST_CONFIG.maxCodeSizeBytes) {
+            return NextResponse.json(
+                { error: `Code exceeds maximum size of ${CONTEST_CONFIG.maxCodeSizeBytes / 1024}KB.` },
+                { status: 400 }
+            );
+        }
+
         const langConfig = LANGUAGE_MAP[language];
         if (!langConfig) {
             return NextResponse.json({ error: 'Unsupported language.' }, { status: 400 });
         }
-
-        const filenames: Record<string, string> = {
-            c: 'main.c',
-            java: 'Main.java',
-            python: 'main.py',
-        };
 
         const response = await fetch(PISTON_API, {
             method: 'POST',
@@ -34,10 +42,11 @@ export async function POST(req: NextRequest) {
             body: JSON.stringify({
                 language: langConfig.language,
                 version: langConfig.version,
-                files: [{ name: filenames[language], content: code }],
+                files: [{ name: FILENAMES[language], content: code }],
                 stdin: stdin || '',
                 compile_timeout: 3000,
                 run_timeout: 3000,
+                memory_limit: 128 * 1024 * 1024, // 128MB
             }),
         });
 
@@ -45,7 +54,7 @@ export async function POST(req: NextRequest) {
             const errText = await response.text().catch(() => '');
             console.error('[Compile API] Piston error:', response.status, errText);
             return NextResponse.json(
-                { error: 'Compiler service unavailable. Make sure Piston Docker is running: docker run -d --name piston -p 2000:2000 --privileged ghcr.io/engineer-man/piston' },
+                { error: 'Compiler service unavailable. Make sure Piston Docker is running.' },
                 { status: 502 }
             );
         }

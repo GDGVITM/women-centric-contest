@@ -18,23 +18,23 @@ export async function POST(
             return NextResponse.json({ error: 'Team not found.' }, { status: 404 });
         }
 
-        const member = await prisma.member.findUnique({
-            where: { teamId_memberNo: { teamId: team.id, memberNo } },
+        // Atomic check-and-set: only update if isJoined is still false
+        // This prevents the race condition where two users click the same slot simultaneously
+        const result = await prisma.member.updateMany({
+            where: {
+                teamId: team.id,
+                memberNo,
+                isJoined: false,
+            },
+            data: {
+                isJoined: true,
+                joinedAt: new Date(),
+            },
         });
 
-        if (!member) {
-            return NextResponse.json({ error: 'Member slot not found.' }, { status: 404 });
-        }
-
-        if (member.isJoined) {
+        if (result.count === 0) {
             return NextResponse.json({ error: 'Slot already taken.' }, { status: 409 });
         }
-
-        // Lock the slot atomically
-        await prisma.member.update({
-            where: { id: member.id },
-            data: { isJoined: true, joinedAt: new Date() },
-        });
 
         return NextResponse.json({ success: true, memberNo });
     } catch {

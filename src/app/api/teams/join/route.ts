@@ -5,12 +5,13 @@ export async function POST(req: NextRequest) {
     try {
         const { teamCode } = await req.json();
 
-        if (!teamCode || !/^T(0[1-9]|1[0-9]|20)$/.test(teamCode)) {
-            return NextResponse.json({ error: 'Invalid team code. Use T01–T20.' }, { status: 400 });
+        if (!teamCode || typeof teamCode !== 'string') {
+            return NextResponse.json({ error: 'Team code is required.' }, { status: 400 });
         }
 
+        // Dynamic lookup instead of hardcoded regex
         const team = await prisma.team.findUnique({
-            where: { teamCode },
+            where: { teamCode: teamCode.toUpperCase().trim() },
             include: {
                 members: { orderBy: { memberNo: 'asc' } },
                 set: true,
@@ -18,14 +19,17 @@ export async function POST(req: NextRequest) {
         });
 
         if (!team) {
-            return NextResponse.json({ error: 'Team not found.' }, { status: 404 });
+            return NextResponse.json({ error: 'Team not found. Please check your code.' }, { status: 404 });
         }
 
-        // Update status to round1 if still waiting
+        // Update status to round1 and record start time if still waiting
         if (team.status === 'waiting') {
             await prisma.team.update({
                 where: { id: team.id },
-                data: { status: 'round1' },
+                data: {
+                    status: 'round1',
+                    startedAt: new Date(),
+                },
             });
         }
 
@@ -33,6 +37,7 @@ export async function POST(req: NextRequest) {
             teamCode: team.teamCode,
             setName: team.set.name,
             status: team.status === 'waiting' ? 'round1' : team.status,
+            startedAt: team.status === 'waiting' ? new Date().toISOString() : team.startedAt,
             members: team.members.map((m) => ({
                 memberNo: m.memberNo,
                 isJoined: m.isJoined,
