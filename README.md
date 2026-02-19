@@ -1,19 +1,42 @@
-# 🔁 Break the Loop
-
-A team-based debugging competition platform built for college events. Teams of 3 debug buggy code snippets, unlock a shared key, and submit a final solution — all through a sleek, real-time web interface.
+<div align="center">
+  <h1 align="center">Break The Loop</h1>
+  <p align="center">
+    <strong>A team-based debugging competition platform built for college events</strong>
+    <br />
+    Next.js • Prisma • Piston • Docker
+    <br />
+    <br />
+    <a href="https://github.com/GDGVITM/women-centric-contest/issues">
+      <img src="https://img.shields.io/github/issues/GDGVITM/women-centric-contest?style=for-the-badge&color=success" alt="Issues" />
+    </a>
+    <a href="https://github.com/GDGVITM/women-centric-contest/network/members">
+      <img src="https://img.shields.io/github/forks/GDGVITM/women-centric-contest?style=for-the-badge&color=orange" alt="Forks" />
+    </a>
+    <a href="https://github.com/GDGVITM/women-centric-contest/stargazers">
+      <img src="https://img.shields.io/github/stars/GDGVITM/women-centric-contest?style=for-the-badge&color=yellow" alt="Stars" />
+    </a>
+    <a href="https://github.com/GDGVITM/women-centric-contest">
+      <img src="https://img.shields.io/github/last-commit/GDGVITM/women-centric-contest?style=for-the-badge&color=blue" alt="Last Commit" />
+    </a>
+    <a href="https://github.com/GDGVITM/women-centric-contest/blob/main/LICENSE">
+      <img src="https://img.shields.io/github/license/GDGVITM/women-centric-contest?style=for-the-badge&color=red" alt="License" />
+    </a>
+  </p>
+</div>
 
 ---
 
-## ✨ Features
+## 🔁 About The Project
+
+**Break The Loop** is a competitive debugging platform where teams of 3 race to fix buggy code, unlock levels, and solve algorithmic challenges. It features:
 
 - **20 Teams**, 3 members each, assigned across 4 problem sets (A–D)
-- **Round 1** — Each member debugs a unique code snippet in C, Java, or Python using an in-browser Monaco editor
-- **Key Unlock** — After all members submit, the team enters a 6-digit key to unlock Round 2
-- **Round 2** — Teams collaboratively submit a written solution to a common problem statement
-- **Live Status** — Pages auto-refresh with polling to show real-time team progress
-- **Sandboxed Execution** — Code runs inside a Docker-based [Piston](https://github.com/engineer-man/piston) container
-
----
+- **Round 1** — Each member debugs a unique code snippet in C, Java, or Python (Monaco Editor)
+- **Key Unlock** — Team inputs a 6-digit key to unlock Round 2
+- **Round 2** — Collaborative problem solving
+- **Round 3** — Final algorithmic challenge
+- **Live Status** — Real-time dashboard usage
+- **Piston V2** — Sandboxed execution on Render/Docker
 
 ## 🛠 Tech Stack
 
@@ -157,43 +180,6 @@ The app will be available at **http://localhost:3000**
 
 ---
 
-## 🖥 Event Day — Network Access
-
-For contestants to access the app from their devices over the college LAN:
-
-1. Find the host PC's local IP address:
-
-   ```powershell
-   ipconfig
-   ```
-
-   Look for the **IPv4 Address** under your active network adapter (e.g., `192.168.1.100`)
-
-2. Contestants navigate to `http://<host-ip>:3000` on their browsers
-
-3. Ensure the host PC's firewall allows inbound connections on port **3000** and **2000**
-
----
-
-## 🔄 Restarting After a Reboot
-
-If the host PC restarts, run these commands to get back up:
-
-```powershell
-# 1. Start Docker Desktop (if not set to auto-start)
-
-# 2. Restart the Piston container
-docker start piston
-
-# 3. Start the dev server
-cd women-centric-contest
-npm run dev
-```
-
-> The Piston container retains installed runtimes across restarts thanks to the `piston-data` volume.
-
----
-
 ## 📂 Project Structure
 
 ```
@@ -249,29 +235,53 @@ npx prisma db seed
 
 ## ☁️ Deployment (Render)
 
-The project is configured for deployment on **Render** (PostgreSQL + Node.js).
+The project is configured for a **V2 Deployment** split into two services on Render:
 
-### 1. Database (PostgreSQL)
+### 1. **Piston API (Docker Service on VPS/Render)**
 
-A managed PostgreSQL instance is required (replacing local SQLite).
+- **Repo**: This repository (branch: `piston-deploy` or just use the `Dockerfile` in root).
+- **Runtime**: Docker.
+- **Internal Port**: 2000.
 
-- **Service Name**: `women-centric-contest-db`
-- **Region**: Frankfurt (or closest to user)
-- **Plan**: Free
+#### Nginx Reverse Proxy Setup (for VPS)
 
-### 2. Web Service
+If you are hosting Piston on a VPS (AWS/DigitalOcean) instead of Render, use Nginx to expose it securely:
 
-- **Build Command**: `npm install && npx prisma generate && npm run build`
+```nginx
+server {
+    listen 80;
+    server_name piston.yourdomain.com;
+
+    location / {
+        proxy_pass http://localhost:2000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+_Reload Nginx after saving: `sudo systemctl reload nginx`_
+
+### 2. **PostgreSQL Database**
+
+- Create a managed PostgreSQL instance on Render.
+- **Internal URL**: Used by the Web Service.
+- **External URL**: Used for local `prisma db push`.
+
+### 3. **Web Service (Node.js)**
+
+- **Build Command**: `npm install && npx prisma generate && npx prisma db push --accept-data-loss && npx prisma db seed && npm run build`
+  - _Note: We include db push/seed in build to ensure DB is always up to date._
 - **Start Command**: `npm start`
 - **Environment Variables**:
-  - `DATABASE_URL`: `postgres://user:password@hostname:port/dbname` (Internal URL from Render Dashboard)
-  - `ADMIN_SECRET`: Your secure admin password
-  - `PISTON_API_URL`: Use the public API or your private instance.
-  - **Private Piston**: For hybrid setup (Local Docker + Ngrok), see [HYBRID_DEPLOY.md](./HYBRID_DEPLOY.md).
+  - `DATABASE_URL`: `postgres://...` (Internal Render URL)
+  - `PISTON_API_URL`: `https://piston-api-gdg.onrender.com/api/v2/execute`
+  - `ADMIN_SECRET`: Your secure secret.
 
-> **Important**: After creating the PostgreSQL database on Render, you must copy the **Internal Database URL** from the database dashboard and update the `DATABASE_URL` environment variable in your Web Service settings.
-
-This project is maintained by **GDG on Campus VIT-M**.
+> **Note**: For local development, you can still use the local Docker Piston instance, or connect to the remote one if you don't want to run Docker locally.
 
 ---
 
