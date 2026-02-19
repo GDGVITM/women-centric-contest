@@ -65,7 +65,10 @@ export async function POST(
         if (isCorrect) {
             await prisma.team.update({
                 where: { id: team.id },
-                data: { status: 'round2' },
+                data: { 
+                    status: 'round2',
+                    startedAt: new Date()
+                },
             });
 
             return NextResponse.json({ success: true, unlocked: true });

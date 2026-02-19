@@ -7,10 +7,12 @@ import { Loader2, RefreshCw, CheckCircle, Lock, Unlock, Clock, AlertTriangle } f
 export default function AdminDashboard() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('ALL');
   const router = useRouter();
 
   const fetchData = async () => {
-    setLoading(true);
+    // Only show loading on initial fetch
+    if (!data) setLoading(true);
     try {
       const res = await fetch('/api/admin/stats');
       if (res.status === 401) {
@@ -46,29 +48,59 @@ export default function AdminDashboard() {
 
   const { teams, stats } = data;
 
+  // Sorting Logic: Active > Unlocking > Round 1 > Waiting > Completed
+  const statusPriority: any = { 'round2': 4, 'unlocking': 3, 'round1': 2, 'waiting': 0, 'completed': 1 };
+  
+  const sortedTeams = [...teams].sort((a: any, b: any) => {
+      const prioA = statusPriority[a.status] || 0;
+      const prioB = statusPriority[b.status] || 0;
+      if (prioA !== prioB) return prioB - prioA; // Higher priority first
+      // If same status, sort by startedAt (Latest first)
+      return new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime();
+  });
+
+  const filteredTeams = sortedTeams.filter((t: any) => {
+      if (filter === 'ALL') return true;
+      return t.status.toLowerCase() === filter.toLowerCase();
+  });
+
   return (
     <div className="min-h-screen bg-black text-white px-8 pb-8 pt-24">
       <div className="max-w-7xl mx-auto space-y-8">
         
         {/* Header */}
-        <div className="flex justify-between items-center border-b border-white/10 pb-6">
+        <div className="flex flex-col md:flex-row justify-between items-center border-b border-white/10 pb-6 gap-4">
           <div className="flex items-center gap-4">
              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
                 Contest Admin
              </h1>
              <a href="/" target="_blank" className="text-xs text-blue-400 hover:text-blue-300">Open Landing Page ↗</a>
           </div>
+          
+          {/* Filters */}
+          <div className="flex gap-2">
+              {['ALL', 'ROUND1', 'ROUND2', 'UNLOCKING', 'COMPLETED'].map(f => (
+                  <button
+                    key={f}
+                    onClick={() => setFilter(f)}
+                    className={`px-3 py-1 rounded-full text-xs font-mono transition-colors ${filter === f ? 'bg-white text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                  >
+                      {f}
+                  </button>
+              ))}
+          </div>
+
           <button 
             onClick={fetchData}
             className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
           >
-            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+            <RefreshCw size={16} className={loading && !data ? 'animate-spin' : ''} />
             Refresh
           </button>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <StatCard label="Total Teams" value={stats?.totalTeams || 0} icon={<Clock />} color="text-white" />
           <StatCard label="Round 1" value={stats?.round1 || 0} icon={<Clock />} color="text-blue-400" />
           <StatCard label="Unlocking" value={stats?.unlocking || 0} icon={<Lock />} color="text-yellow-400" />
@@ -85,28 +117,12 @@ export default function AdminDashboard() {
                   <th className="p-4">Team</th>
                   <th className="p-4">Round</th>
                   <th className="p-4">Time Left</th>
-                  <th className="p-4">Progress</th>
+                  <th className="p-4">Progress / Members</th>
                   <th className="p-4">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {teams?.map((team: any) => {
-                    // Calculate Time Left
-                    let timeLeft = '-';
-                    if (team.startedAt && team.status !== 'completed' && team.status !== 'waiting') {
-                        const start = new Date(team.startedAt).getTime();
-                        const end = start + 45 * 60 * 1000;
-                        const now = Date.now();
-                        const diff = end - now;
-                        if (diff > 0) {
-                            const mins = Math.floor(diff / 60000);
-                            timeLeft = `${mins}m`;
-                        } else {
-                            timeLeft = 'Expired';
-                        }
-                    }
-
-                    return (
+                {filteredTeams.map((team: any) => (
                   <tr key={team.id} className="hover:bg-white/[0.02]">
                     <td className="p-4 font-mono font-bold text-blue-300">
                         {team.teamCode} 
@@ -116,7 +132,13 @@ export default function AdminDashboard() {
                         <span className="text-xs font-mono text-gray-400">R{team.currentRound} ({team.set?.name})</span>
                         <div className="mt-1"><StatusBadge status={team.status} /></div>
                     </td>
-                    <td className="p-4 font-mono text-yellow-400">{timeLeft}</td>
+                    <td className="p-4 font-mono text-yellow-400">
+                        {team.startedAt && team.status !== 'completed' && team.status !== 'waiting' ? (
+                            <LiveTimer startedAt={team.startedAt} durationMinutes={45} />
+                        ) : (
+                            <span className="text-gray-600">-</span>
+                        )}
+                    </td>
                     <td className="p-4 text-gray-400">
                       <div className="flex gap-2">
                         {team.members.map((m: any) => (
@@ -153,9 +175,12 @@ export default function AdminDashboard() {
                       </button>
                     </td>
                   </tr>
-                )})}
+                ))}
               </tbody>
             </table>
+            {filteredTeams.length === 0 && (
+                <div className="p-8 text-center text-gray-500">No teams found matching filter.</div>
+            )}
           </div>
         </div>
 
@@ -177,6 +202,34 @@ export default function AdminDashboard() {
       </div>
     </div>
   );
+}
+
+function LiveTimer({ startedAt, durationMinutes }: { startedAt: string, durationMinutes: number }) {
+    const [timeLeft, setTimeLeft] = useState('');
+    
+    useEffect(() => {
+        const calculate = () => {
+            const start = new Date(startedAt).getTime();
+            const end = start + durationMinutes * 60 * 1000;
+            const now = Date.now();
+            const diff = end - now;
+            
+            if (diff <= 0) {
+                setTimeLeft('Expired');
+                return;
+            }
+            
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((diff % (1000 * 60)) / 1000);
+            setTimeLeft(`${m}m ${s}s`);
+        };
+        
+        calculate();
+        const timer = setInterval(calculate, 1000);
+        return () => clearInterval(timer);
+    }, [startedAt, durationMinutes]);
+    
+    return <span className={timeLeft === 'Expired' ? 'text-red-500' : 'text-yellow-400'}>{timeLeft}</span>;
 }
 
 function StatCard({ label, value, icon, color }: any) {

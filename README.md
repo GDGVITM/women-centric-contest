@@ -101,7 +101,7 @@ Make sure Docker Desktop is running on your machine.
 docker run -d --name piston -p 2000:2000 --privileged -v piston-data:/piston ghcr.io/engineer-man/piston
 ```
 
-> **Important:** The `-v piston-data:/piston` volume mount is required on Windows to avoid a known `/piston` directory issue.
+> **Note (Windows):** We use a **named volume** (`piston-data`) instead of a local path to ensure proper file permissions and performance on Docker Desktop for Windows.
 
 #### c. Wait for Piston to Initialize (~15 seconds)
 

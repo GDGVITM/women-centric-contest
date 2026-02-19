@@ -2,81 +2,105 @@
   "A": {
     "round1": {
       "1": {
-        "python": { "code": "# Buggy Python: Calculate Factorial\n# Goal: Fix syntax errors\n\ndef factorial(n)\n    if n == 0\n        return 1\n    else:\n        return n * factorial(n - 1)\n\nprint(factorial(5))", "expectedOutput": "120" },
-        "java": { "code": "// Buggy Java: Calculate Factorial\npublic class Main {\n    public static void main(String[] args) {\n        int num = 5;\n        int result = 1;\n        for(int i = 1; i <= num; i++) {\n            result *= i\n        }\n        System.out.println(result);\n    }\n}", "expectedOutput": "120" },
-        "c": { "code": "// Buggy C: Calculate Factorial\n#include <stdio.h>\nint main() {\n    int n = 5, f = 1;\n    for(int i=1; i<=n; i++)\n        f = f * i\n    printf(\"%d\", f);\n    return 0;\n}", "expectedOutput": "120" }
+        "python": { "code": "# Buggy Python: Calculate Factorial\n# Goal: Fix the recursion logic and syntax\n\ndef factorial(n)\n    if n == 0\n        return 1\n    else:\n        return n * factorial(n - 2) # Bug: infinite recursion risk and logic error\n\nprint(factorial(5))", "expectedOutput": "120" },
+        "java": { "code": "// Buggy Java: Calculate Factorial\npublic class Main {\n    public static void main(String[] args) {\n        int num = 5;\n        int result = 1;\n        // Bug: Loop condition and result logic\n        for(int i = 1; i < num; i++) {\n            result = result + i;\n        }\n        System.out.println(result);\n    }\n}", "expectedOutput": "120" },
+        "c": { "code": "// Buggy C: Calculate Factorial\n#include <stdio.h>\nint main() {\n    int n = 5, f = 0; // Bug: Initial value of f\n    for(int i=1; i<=n; i++)\n        f = f * i;\n    printf(\"%d\", f);\n    return 0;\n}", "expectedOutput": "120" }
       },
       "2": {
-        "python": { "code": "# Buggy Python: Palindrome\ndef is_palindrome(s):\n    return s == s[::-1]\nprint(is_palindrome('radar'))", "expectedOutput": "True" },
-        "java": { "code": "public class Main { public static void main(String[] args) { System.out.println(\"True\"); } }", "expectedOutput": "True" },
-        "c": { "code": "#include <stdio.h>\nint main() { printf(\"True\"); return 0; }", "expectedOutput": "True" }
+        "python": { "code": "# Buggy Python: Palindrome Check\n# Goal: Return True if palindrome\n\ndef is_palindrome(s):\n    # Bug: Logic error in slicing\n    return s == s[1:]\n\nprint(is_palindrome('radar'))", "expectedOutput": "True" },
+        "java": { "code": "// Buggy Java: Palindrome Check\npublic class Main {\n    public static void main(String[] args) {\n        String str = \"radar\", rev = \"\";\n        for (int i = str.length() - 1; i >= 0; i--) // Bug: Off-by-one or logic?\n            rev = rev + str.charAt(i);\n        if (str.equals(rev))\n            System.out.println(\"True\");\n        else\n            System.out.println(\"False\");\n    }\n}", "expectedOutput": "True" },
+        "c": { "code": "// Buggy C: Palindrome Check\n#include <stdio.h>\n#include <string.h>\nint main() {\n    char str[] = \"radar\";\n    int l = 0;\n    int h = strlen(str) - 1;\n    // Bug: While loop logic\n    while (h > l) {\n        if (str[l++] != str[h--]) {\n            printf(\"False\");\n            return 0;\n        }\n    }\n    printf(\"True\");\n    return 0;\n}", "expectedOutput": "True" }
       },
       "3": {
-        "python": { "code": "# Buggy Python: Fibonacci\ndef fib(n):\n    if n<=1: return n\n    return fib(n-1) + fib(n-2)\nprint(fib(6))", "expectedOutput": "8" },
-        "java": { "code": "public class Main { public static void main(String[] args) { System.out.println(\"8\"); } }", "expectedOutput": "8" },
-        "c": { "code": "#include <stdio.h>\nint main() { printf(\"8\"); return 0; }", "expectedOutput": "8" }
-      }
+        "python": { "code": "# Buggy Python: Fibonacci Series (Nth number)\n# Goal: Print the 6th fib number (8)\ndef fib(n):\n    if n<=1: return n\n    # Bug: Incorrect recursive formula\n    return fib(n-1) + fib(n-3)\nprint(fib(6))", "expectedOutput": "8" },
+        "java": { "code": "// Buggy Java: Fibonacci\npublic class Main {\n    public static void main(String[] args) {\n        int n = 6, t1 = 0, t2 = 1;\n        for (int i = 1; i <= n; ++i) {\n            int sum = t1 + t2;\n            t1 = t2;\n            t2 = sum;\n        }\n        // Bug: Logic prints wrong term or sequence\n        System.out.println(t1); \n    }\n}", "expectedOutput": "8" },
+        "c": { "code": "// Buggy C: Fibonacci\n#include <stdio.h>\nint main() {\n    int n=6, t1=0, t2=1, nextTerm;\n    for (int i = 1; i <= n; ++i) {\n        // Bug: Logic flow\n        nextTerm = t1 + t2;\n        t1 = t2;\n        t2 = nextTerm;\n    }\n    printf(\"%d\", t1);\n    return 0;\n}", "expectedOutput": "8" }
+    }
     },
     "round2": {
-      "1": { "python": { "code": "print('Set A R2 M1')", "expectedOutput": "Set A R2 M1" }, "java": { "code": "class Main { pswm { sout(\"Set A R2 M1\"); } }", "expectedOutput": "Set A R2 M1" }, "c": { "code": "printf(\"Set A R2 M1\")", "expectedOutput": "Set A R2 M1" } },
-      "2": { "python": { "code": "print('Set A R2 M2')", "expectedOutput": "Set A R2 M2" }, "java": { "code": "class Main { pswm { sout(\"Set A R2 M2\"); } }", "expectedOutput": "Set A R2 M2" }, "c": { "code": "printf(\"Set A R2 M2\")", "expectedOutput": "Set A R2 M2" } },
-      "3": { "python": { "code": "print('Set A R2 M3')", "expectedOutput": "Set A R2 M3" }, "java": { "code": "class Main { pswm { sout(\"Set A R2 M3\"); } }", "expectedOutput": "Set A R2 M3" }, "c": { "code": "printf(\"Set A R2 M3\")", "expectedOutput": "Set A R2 M3" } }
+      "1": {
+        "python": { "code": "# Buggy Pattern: Right Triangle\n# Goal: \n# *\n# **\n# ***\n# ****\n# *****\n\nrows = 5\nfor i in range(rows):\n    # Bug: Range end\n    for j in range(i):\n        print(\"*\", end=\" \")\n    print('')", "expectedOutput": "*\n**\n***\n****\n*****" },
+        "java": { "code": "// Buggy Pattern\npublic class Main {\n    public static void main(String[] args) {\n        int rows = 5;\n        for (int i = 1; i <= rows; ++i) {\n            // Bug: Inner loop condition\n            for (int j = 1; j < i; ++j) {\n                System.out.print(\"*\");\n            }\n            System.out.println();\n        }\n    }\n}", "expectedOutput": "*\n**\n***\n****\n*****" },
+        "c": { "code": "// Buggy Pattern\n#include <stdio.h>\nint main() {\n   int i, j, rows=5;\n   for (i = 1; i <= rows; ++i) {\n      // Bug: Inner loop\n      for (j = 1; j <= rows; ++j) {\n         printf(\"*\");\n      }\n      printf(\"\\n\");\n   }\n   return 0;\n}", "expectedOutput": "*\n**\n***\n****\n*****" }
+      },
+      "2": {
+        "python": { "code": "# Buggy Pattern: Number Pyramid\n# Goal:\n# 1\n# 1 2\n# 1 2 3\n# 1 2 3 4\n# 1 2 3 4 5\n\nrows = 5\nfor i in range(1, rows + 1):\n    for j in range(1, i + 1):\n        # Bug: Printing wrong variable\n        print(i, end=\" \")\n    print('')", "expectedOutput": "1\n1 2\n1 2 3\n1 2 3 4\n1 2 3 4 5" },
+        "java": { "code": "// Buggy Pattern\npublic class Main {\n    public static void main(String[] args) {\n        int rows = 5;\n        for (int i = 1; i <= rows; ++i) {\n            for (int j = 1; j <= i; ++j) {\n                // Bug: Printing wrong variable\n                System.out.print(i + \" \");\n            }\n            System.out.println();\n        }\n    }\n}", "expectedOutput": "1 2 3 4 5" },
+        "c": { "code": "#include <stdio.h>\nint main() {\n   int i, j, rows=5;\n   for (i = 1; i <= rows; ++i) {\n      for (j = 1; j <= i; ++j) {\n         // Bug: format specifier or variable\n         printf(\"%d \", j*2);\n      }\n      printf(\"\\n\");\n   }\n   return 0;\n}", "expectedOutput": "1 2 3 4 5" }
+      },
+      "3": {
+         "python": { "code": "# Buggy Pattern: Inverted Star Pyramid\n# Goal: Reverse of R2-M1\nrows = 5\nfor i in range(rows, 0, -1):\n    # Bug: Loop range\n    for j in range(0, rows):\n        print(\"*\", end=\" \")\n    print(\"\\r\")", "expectedOutput": "*****\n****\n***\n**\n*" },
+         "java": { "code": "public class Main {\n    public static void main(String[] args) {\n        int rows = 5;\n        for(int i = rows; i >= 1; --i) {\n            for(int j = 1; j <= i; ++j) {\n                System.out.print(\"* \");\n            }\n            System.out.println();\n        }\n    }\n}", "expectedOutput": "*****\n****\n***\n**\n*" },
+         "c": { "code": "#include <stdio.h>\nint main() {\n    int rows = 5;\n    for (int i = rows; i >= 1; --i) {\n        for (int j = 1; j <= i; ++j) {\n            printf(\"* \");\n        }\n        printf(\"\\n\");\n    }\n    return 0;\n}", "expectedOutput": "*****\n****\n***\n**\n*" }
+      }
     },
     "round3": {
-      "1": { "python": { "code": "print('Set A R3 M1')", "expectedOutput": "Set A R3 M1" }, "java": { "code": "class Main { pswm { sout(\"Set A R3 M1\"); } }", "expectedOutput": "Set A R3 M1" }, "c": { "code": "printf(\"Set A R3 M1\")", "expectedOutput": "Set A R3 M1" } },
-      "2": { "python": { "code": "print('Set A R3 M2')", "expectedOutput": "Set A R3 M2" }, "java": { "code": "class Main { pswm { sout(\"Set A R3 M2\"); } }", "expectedOutput": "Set A R3 M2" }, "c": { "code": "printf(\"Set A R3 M2\")", "expectedOutput": "Set A R3 M2" } },
-      "3": { "python": { "code": "print('Set A R3 M3')", "expectedOutput": "Set A R3 M3" }, "java": { "code": "class Main { pswm { sout(\"Set A R3 M3\"); } }", "expectedOutput": "Set A R3 M3" }, "c": { "code": "printf(\"Set A R3 M3\")", "expectedOutput": "Set A R3 M3" } }
+      "1": {
+        "python": { "code": "# Buggy Class: BankAccount\nclass BankAccount:\n    def __init__(self, balance=0):\n        self.balance = balance\n\n    def deposit(self, amount):\n        # Bug: Not adding to balance\n        new_bal = self.balance + amount\n        return new_bal\n\n    def withdraw(self, amount):\n        if amount > self.balance:\n            return \"Insufficient\"\n        self.balance -= amount\n        return self.balance\n\nacc = BankAccount(100)\nacc.deposit(50)\nprint(acc.withdraw(120))", "expectedOutput": "30" },
+        "java": { "code": "// Buggy Java Class\nclass BankAccount {\n    int balance;\n    public BankAccount(int initial) { this.balance = initial; }\n    public void deposit(int amount) { balance = amount; } // Bug: Overwrites check\n    public int withdraw(int amount) { balance -= amount; return balance; }\n}\npublic class Main {\n    public static void main(String[] args) {\n        BankAccount acc = new BankAccount(100);\n        acc.deposit(50);\n        System.out.println(acc.withdraw(120));\n    }\n}", "expectedOutput": "30" },
+        "c": { "code": "// Buggy C Struct implementation\n#include <stdio.h>\ntypedef struct { int balance; } Account;\nvoid deposit(Account *a, int amt) {\n    a->balance = amt; // Bug: Overwrite\n}\nint withdraw(Account *a, int amt) {\n    a->balance -= amt;\n    return a->balance;\n}\nint main() {\n    Account acc = {100};\n    deposit(&acc, 50);\n    printf(\"%d\", withdraw(&acc, 120));\n    return 0;\n}", "expectedOutput": "30" }
+      },
+      "2": {
+        "python": { "code": "# Buggy Class: Student Grade\nclass Student:\n    def __init__(self, name, marks):\n        self.name = name\n        self.marks = marks\n    \n    def get_average(self):\n        # Bug: Logic error in average\n        return sum(self.marks) * len(self.marks)\n\ns = Student(\"Alice\", [85, 90, 95])\nprint(int(s.get_average()))", "expectedOutput": "90" },
+        "java": { "code": "// Buggy Java Class\nclass Student {\n    int[] marks;\n    public Student(int[] m) { marks = m; }\n    public int getAvg() {\n        int sum = 0;\n        for(int m : marks) sum += m;\n        return sum; // Bug: Missing divide by length\n    }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Student s = new Student(new int[]{85, 90, 95});\n        System.out.println(s.getAvg());\n    }\n}", "expectedOutput": "90" },
+         "c": { "code": "// Buggy C: Average\n#include <stdio.h>\nint getAvg(int marks[], int n) {\n    int sum = 0;\n    for(int i=0; i<n; i++) sum += marks[i];\n    return sum; // Bug: No division\n}\nint main() {\n    int m[] = {85, 90, 95};\n    printf(\"%d\", getAvg(m, 3));\n    return 0;\n}", "expectedOutput": "90" }
+      },
+      "3": {
+        "python": { "code": "# Buggy Class: ShoppingCart\nclass Cart:\n    def __init__(self):\n        self.items = []\n    def add(self, price):\n        self.items.append(price)\n    def total(self):\n        t = 0\n        for p in self.items:\n            t = p # Bug: overwrites total\n        return t\n\nc = Cart()\nc.add(10); c.add(20); c.add(30)\nprint(c.total())", "expectedOutput": "60" },
+        "java": { "code": "// Buggy Java\nimport java.util.*;\nclass Cart {\n    List<Integer> items = new ArrayList<>();\n    void add(int p) { items.add(p); }\n    int total() {\n        int t = 0;\n        for(int p : items) t = p; // Bug\n        return t;\n    }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Cart c = new Cart();\n        c.add(10); c.add(20); c.add(30);\n        System.out.println(c.total());\n    }\n}", "expectedOutput": "60" },
+        "c": { "code": "// Buggy C Array Sum\n#include <stdio.h>\nint main() {\n    int items[] = {10, 20, 30};\n    int total = 0;\n    for(int i=0; i<3; i++) total = items[i]; // Bug\n    printf(\"%d\", total);\n    return 0;\n}", "expectedOutput": "60" }
+      }
     }
   },
   "B": {
-    "round1": {
-      "1": { "python": { "code": "print('Set B R1 M1')", "expectedOutput": "Set B R1 M1" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set B R1 M1\"); } }", "expectedOutput": "Set B R1 M1" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set B R1 M1\");return 0;}", "expectedOutput": "Set B R1 M1" } },
-      "2": { "python": { "code": "print('Set B R1 M2')", "expectedOutput": "Set B R1 M2" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set B R1 M2\"); } }", "expectedOutput": "Set B R1 M2" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set B R1 M2\");return 0;}", "expectedOutput": "Set B R1 M2" } },
-      "3": { "python": { "code": "print('Set B R1 M3')", "expectedOutput": "Set B R1 M3" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set B R1 M3\"); } }", "expectedOutput": "Set B R1 M3" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set B R1 M3\");return 0;}", "expectedOutput": "Set B R1 M3" } }
-    },
-    "round2": {
-      "1": { "python": { "code": "print('Set B R2 M1')", "expectedOutput": "Set B R2 M1" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set B R2 M1\"); } }", "expectedOutput": "Set B R2 M1" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set B R2 M1\");return 0;}", "expectedOutput": "Set B R2 M1" } },
-      "2": { "python": { "code": "print('Set B R2 M2')", "expectedOutput": "Set B R2 M2" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set B R2 M2\"); } }", "expectedOutput": "Set B R2 M2" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set B R2 M2\");return 0;}", "expectedOutput": "Set B R2 M2" } },
-      "3": { "python": { "code": "print('Set B R2 M3')", "expectedOutput": "Set B R2 M3" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set B R2 M3\"); } }", "expectedOutput": "Set B R2 M3" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set B R2 M3\");return 0;}", "expectedOutput": "Set B R2 M3" } }
-    },
-    "round3": {
-      "1": { "python": { "code": "print('Set B R3 M1')", "expectedOutput": "Set B R3 M1" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set B R3 M1\"); } }", "expectedOutput": "Set B R3 M1" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set B R3 M1\");return 0;}", "expectedOutput": "Set B R3 M1" } },
-      "2": { "python": { "code": "print('Set B R3 M2')", "expectedOutput": "Set B R3 M2" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set B R3 M2\"); } }", "expectedOutput": "Set B R3 M2" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set B R3 M2\");return 0;}", "expectedOutput": "Set B R3 M2" } },
-      "3": { "python": { "code": "print('Set B R3 M3')", "expectedOutput": "Set B R3 M3" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set B R3 M3\"); } }", "expectedOutput": "Set B R3 M3" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set B R3 M3\");return 0;}", "expectedOutput": "Set B R3 M3" } }
-    }
+      "round1": {
+          "1": { "python": { "code": "# Buggy Python: Prime Check (Bug at border case)", "expectedOutput": "True" }, "java": { "code": "", "expectedOutput": "True" }, "c": { "code": "", "expectedOutput": "True" } },
+          "2": { "python": { "code": "# Buggy Python: Reverse String", "expectedOutput": "olleh" }, "java": { "code": "", "expectedOutput": "" }, "c": { "code": "", "expectedOutput": "" } },
+          "3": { "python": { "code": "# Buggy Python: Armstrong Number", "expectedOutput": "True" }, "java": { "code": "", "expectedOutput": "" }, "c": { "code": "", "expectedOutput": "" } }
+      },
+      "round2": {
+          "1": { "python": { "code": "# Diamond Pattern Bug", "expectedOutput": "" }, "java": { "code": "", "expectedOutput": "" }, "c": { "code": "", "expectedOutput": "" } },
+          "2": { "python": { "code": "# Floyd's Triangle Bug", "expectedOutput": "" }, "java": { "code": "", "expectedOutput": "" }, "c": { "code": "", "expectedOutput": "" } },
+          "3": { "python": { "code": "# Hourglass Pattern Bug", "expectedOutput": "" }, "java": { "code": "", "expectedOutput": "" }, "c": { "code": "", "expectedOutput": "" } }
+      },
+      "round3": {
+          "1": { "python": { "code": "# Library System Bug", "expectedOutput": "" }, "java": { "code": "", "expectedOutput": "" }, "c": { "code": "", "expectedOutput": "" } },
+          "2": { "python": { "code": "# Inventory System Bug", "expectedOutput": "" }, "java": { "code": "", "expectedOutput": "" }, "c": { "code": "", "expectedOutput": "" } },
+          "3": { "python": { "code": "# Employee Payroll Bug", "expectedOutput": "" }, "java": { "code": "", "expectedOutput": "" }, "c": { "code": "", "expectedOutput": "" } }
+      }
   },
   "C": {
-     "round1": {
-        "1": { "python": { "code": "print('Set C R1 M1')", "expectedOutput": "Set C R1 M1" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set C R1 M1\"); } }", "expectedOutput": "Set C R1 M1" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set C R1 M1\");return 0;}", "expectedOutput": "Set C R1 M1" } },
-        "2": { "python": { "code": "print('Set C R1 M2')", "expectedOutput": "Set C R1 M2" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set C R1 M2\"); } }", "expectedOutput": "Set C R1 M2" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set C R1 M2\");return 0;}", "expectedOutput": "Set C R1 M2" } },
-        "3": { "python": { "code": "print('Set C R1 M3')", "expectedOutput": "Set C R1 M3" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set C R1 M3\"); } }", "expectedOutput": "Set C R1 M3" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set C R1 M3\");return 0;}", "expectedOutput": "Set C R1 M3" } }
-     },
-     "round2": {
-        "1": { "python": { "code": "print('Set C R2 M1')", "expectedOutput": "Set C R2 M1" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set C R2 M1\"); } }", "expectedOutput": "Set C R2 M1" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set C R2 M1\");return 0;}", "expectedOutput": "Set C R2 M1" } },
-        "2": { "python": { "code": "print('Set C R2 M2')", "expectedOutput": "Set C R2 M2" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set C R2 M2\"); } }", "expectedOutput": "Set C R2 M2" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set C R2 M2\");return 0;}", "expectedOutput": "Set C R2 M2" } },
-        "3": { "python": { "code": "print('Set C R2 M3')", "expectedOutput": "Set C R2 M3" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set C R2 M3\"); } }", "expectedOutput": "Set C R2 M3" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set C R2 M3\");return 0;}", "expectedOutput": "Set C R2 M3" } }
-     },
-     "round3": {
-        "1": { "python": { "code": "print('Set C R3 M1')", "expectedOutput": "Set C R3 M1" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set C R3 M1\"); } }", "expectedOutput": "Set C R3 M1" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set C R3 M1\");return 0;}", "expectedOutput": "Set C R3 M1" } },
-        "2": { "python": { "code": "print('Set C R3 M2')", "expectedOutput": "Set C R3 M2" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set C R3 M2\"); } }", "expectedOutput": "Set C R3 M2" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set C R3 M2\");return 0;}", "expectedOutput": "Set C R3 M2" } },
-        "3": { "python": { "code": "print('Set C R3 M3')", "expectedOutput": "Set C R3 M3" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set C R3 M3\"); } }", "expectedOutput": "Set C R3 M3" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set C R3 M3\");return 0;}", "expectedOutput": "Set C R3 M3" } }
-     }
+      "round1": {
+          "1": { "python": { "code": "# Buggy Python: GCD", "expectedOutput": "6" }, "java": { "code": "", "expectedOutput": "" }, "c": { "code": "", "expectedOutput": "" } },
+          "2": { "python": { "code": "# Buggy Python: Anagram", "expectedOutput": "True" }, "java": { "code": "", "expectedOutput": "" }, "c": { "code": "", "expectedOutput": "" } },
+          "3": { "python": { "code": "# Buggy Python: Sum Array", "expectedOutput": "15" }, "java": { "code": "", "expectedOutput": "" }, "c": { "code": "", "expectedOutput": "" } }
+      },
+      "round2": {
+          "1": { "python": { "code": "# Pascal Triangle Bug", "expectedOutput": "" }, "java": { "code": "", "expectedOutput": "" }, "c": { "code": "", "expectedOutput": "" } },
+          "2": { "python": { "code": "# Hollow Square Bug", "expectedOutput": "" }, "java": { "code": "", "expectedOutput": "" }, "c": { "code": "", "expectedOutput": "" } },
+          "3": { "python": { "code": "# X Pattern Bug", "expectedOutput": "" }, "java": { "code": "", "expectedOutput": "" }, "c": { "code": "", "expectedOutput": "" } }
+      },
+      "round3": {
+          "1": { "python": { "code": "# Booking System Bug", "expectedOutput": "" }, "java": { "code": "", "expectedOutput": "" }, "c": { "code": "", "expectedOutput": "" } },
+          "2": { "python": { "code": "# Voting System Bug", "expectedOutput": "" }, "java": { "code": "", "expectedOutput": "" }, "c": { "code": "", "expectedOutput": "" } },
+          "3": { "python": { "code": "# Traffic Light Logic Bug", "expectedOutput": "" }, "java": { "code": "", "expectedOutput": "" }, "c": { "code": "", "expectedOutput": "" } }
+      }
   },
   "D": {
-     "round1": {
-        "1": { "python": { "code": "print('Set D R1 M1')", "expectedOutput": "Set D R1 M1" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set D R1 M1\"); } }", "expectedOutput": "Set D R1 M1" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set D R1 M1\");return 0;}", "expectedOutput": "Set D R1 M1" } },
-        "2": { "python": { "code": "print('Set D R1 M2')", "expectedOutput": "Set D R1 M2" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set D R1 M2\"); } }", "expectedOutput": "Set D R1 M2" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set D R1 M2\");return 0;}", "expectedOutput": "Set D R1 M2" } },
-        "3": { "python": { "code": "print('Set D R1 M3')", "expectedOutput": "Set D R1 M3" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set D R1 M3\"); } }", "expectedOutput": "Set D R1 M3" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set D R1 M3\");return 0;}", "expectedOutput": "Set D R1 M3" } }
-     },
-     "round2": {
-        "1": { "python": { "code": "print('Set D R2 M1')", "expectedOutput": "Set D R2 M1" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set D R2 M1\"); } }", "expectedOutput": "Set D R2 M1" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set D R2 M1\");return 0;}", "expectedOutput": "Set D R2 M1" } },
-        "2": { "python": { "code": "print('Set D R2 M2')", "expectedOutput": "Set D R2 M2" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set D R2 M2\"); } }", "expectedOutput": "Set D R2 M2" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set D R2 M2\");return 0;}", "expectedOutput": "Set D R2 M2" } },
-        "3": { "python": { "code": "print('Set D R2 M3')", "expectedOutput": "Set D R2 M3" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set D R2 M3\"); } }", "expectedOutput": "Set D R2 M3" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set D R2 M3\");return 0;}", "expectedOutput": "Set D R2 M3" } }
-     },
-     "round3": {
-        "1": { "python": { "code": "print('Set D R3 M1')", "expectedOutput": "Set D R3 M1" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set D R3 M1\"); } }", "expectedOutput": "Set D R3 M1" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set D R3 M1\");return 0;}", "expectedOutput": "Set D R3 M1" } },
-        "2": { "python": { "code": "print('Set D R3 M2')", "expectedOutput": "Set D R3 M2" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set D R3 M2\"); } }", "expectedOutput": "Set D R3 M2" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set D R3 M2\");return 0;}", "expectedOutput": "Set D R3 M2" } },
-        "3": { "python": { "code": "print('Set D R3 M3')", "expectedOutput": "Set D R3 M3" }, "java": { "code": "class Main { public static void main(String[] a){ System.out.println(\"Set D R3 M3\"); } }", "expectedOutput": "Set D R3 M3" }, "c": { "code": "#include<stdio.h>\nint main(){printf(\"Set D R3 M3\");return 0;}", "expectedOutput": "Set D R3 M3" } }
-     }
+      "round1": {
+          "1": { "python": { "code": "# Buggy Python: Leap Year", "expectedOutput": "True" }, "java": { "code": "", "expectedOutput": "" }, "c": { "code": "", "expectedOutput": "" } },
+          "2": { "python": { "code": "# Buggy Python: Count Vowels", "expectedOutput": "3" }, "java": { "code": "", "expectedOutput": "" }, "c": { "code": "", "expectedOutput": "" } },
+          "3": { "python": { "code": "# Buggy Python: Max in Array", "expectedOutput": "99" }, "java": { "code": "", "expectedOutput": "" }, "c": { "code": "", "expectedOutput": "" } }
+      },
+      "round2": {
+          "1": { "python": { "code": "# Number Pattern Bug", "expectedOutput": "" }, "java": { "code": "", "expectedOutput": "" }, "c": { "code": "", "expectedOutput": "" } },
+          "2": { "python": { "code": "# Butterfly Pattern Bug", "expectedOutput": "" }, "java": { "code": "", "expectedOutput": "" }, "c": { "code": "", "expectedOutput": "" } },
+          "3": { "python": { "code": "# ZigZag Pattern Bug", "expectedOutput": "" }, "java": { "code": "", "expectedOutput": "" }, "c": { "code": "", "expectedOutput": "" } }
+      },
+      "round3": {
+          "1": { "python": { "code": "# ATM Logic Bug", "expectedOutput": "" }, "java": { "code": "", "expectedOutput": "" }, "c": { "code": "", "expectedOutput": "" } },
+          "2": { "python": { "code": "# Quiz Score Bug", "expectedOutput": "" }, "java": { "code": "", "expectedOutput": "" }, "c": { "code": "", "expectedOutput": "" } },
+          "3": { "python": { "code": "# Temperature Converter Bug", "expectedOutput": "" }, "java": { "code": "", "expectedOutput": "" }, "c": { "code": "", "expectedOutput": "" } }
+      }
   }
 }

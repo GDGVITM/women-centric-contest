@@ -51,12 +51,21 @@ export default function MemberPage({ params }: { params: Promise<{ code: string;
       e.returnValue = ''; // Chrome requires this
     };
 
+    // Disable Back Button
+    window.history.pushState(null, '', window.location.href);
+    const handlePopState = () => {
+        window.history.pushState(null, '', window.location.href);
+        alert("⚠️ Navigation is disabled during the contest. Use the 'Back to Dashboard' button if needed.");
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
     };
   }, []);
 

@@ -39,6 +39,15 @@ async function main() {
         if (res.currentRound !== 1) throw new Error(`Expected Round 1, got ${res.currentRound}`);
     });
 
+    await step('Join Slots', async () => {
+        for (let i = 1; i <= 3; i++) {
+            await fetchJson(`/api/teams/${TEAM_CODE}/members`, {
+                method: 'POST',
+                body: JSON.stringify({ memberNo: i })
+            });
+        }
+    });
+
     await step('Submit Round 1 for All Members', async () => {
         // Member 1
         await fetchJson('/api/submit', {

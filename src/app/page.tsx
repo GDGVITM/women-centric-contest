@@ -22,7 +22,22 @@ export default function LandingPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const [pistonStatus, setPistonStatus] = useState<'online' | 'offline' | 'checking'>('checking');
+
+  useEffect(() => {
+    fetch('/api/piston/status')
+      .then(res => res.json())
+      .then(data => setPistonStatus(data.status === 'online' ? 'online' : 'offline'))
+      .catch(() => setPistonStatus('offline'));
+  }, []);
+
   const handleJoin = async () => {
+    if (pistonStatus === 'offline') {
+       if(!confirm("⚠️ The compilation system appears to be OFFLINE. You may experience issues running code. Continue anyway?")) {
+           return;
+       }
+    }
+
     if (!teamCode.trim()) {
       setError('Please enter a team code.');
       return;
@@ -62,6 +77,14 @@ export default function LandingPage() {
 
   return (
     <div style={{ overflowX: 'hidden' }}>
+      
+      {/* System Status Banner */}
+      {pistonStatus === 'offline' && (
+        <div className="bg-red-500/10 border-b border-red-500/20 text-red-500 px-4 py-2 text-center text-sm font-mono flex items-center justify-center gap-2">
+           <ShieldCheck size={14} /> 
+           <span>SYSTEM WARNING: Compilation Service Unavailable. Contest functions may be limited.</span>
+        </div>
+      )}
       
       {/* Hero Section */}
       <section style={{ 
