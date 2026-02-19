@@ -36,8 +36,8 @@ export async function POST(req: NextRequest) {
                 version: langConfig.version,
                 files: [{ name: filenames[language], content: code }],
                 stdin: stdin || '',
-                compile_timeout: 10000,
-                run_timeout: 5000,
+                compile_timeout: 3000,
+                run_timeout: 3000,
             }),
         });
 
