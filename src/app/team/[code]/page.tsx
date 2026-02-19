@@ -1,21 +1,22 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, use } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion } from 'motion/react';
+import { User, Check, Lock, ArrowRight, Loader2 } from 'lucide-react';
 
-interface MemberInfo {
+interface MemberData {
   memberNo: number;
   isJoined: boolean;
   isSubmitted: boolean;
 }
 
-export default function TeamJoinPage() {
-  const { code } = useParams<{ code: string }>();
+export default function TeamHubPage({ params }: { params: Promise<{ code: string }> }) {
+  const { code } = use(params);
   const router = useRouter();
-  const [members, setMembers] = useState<MemberInfo[]>([]);
+  const [members, setMembers] = useState<MemberData[]>([]);
   const [teamStatus, setTeamStatus] = useState('');
   const [setName, setSetName] = useState('');
-  const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState<number | null>(null);
   const [error, setError] = useState('');
 
@@ -23,15 +24,13 @@ export default function TeamJoinPage() {
     try {
       const res = await fetch(`/api/teams/${code}/members`);
       const data = await res.json();
-      if (res.ok) {
+      if (data.members) {
         setMembers(data.members);
         setTeamStatus(data.status);
         setSetName(data.setName);
       }
     } catch {
-      // ignore polling errors
-    } finally {
-      setLoading(false);
+      /* silent poll failure */
     }
   }, [code]);
 
@@ -41,103 +40,153 @@ export default function TeamJoinPage() {
     return () => clearInterval(interval);
   }, [fetchStatus]);
 
+  useEffect(() => {
+    if (teamStatus === 'unlocking') router.push(`/team/${code}/unlock`);
+    else if (teamStatus === 'round2') router.push(`/team/${code}/round2`);
+    else if (teamStatus === 'completed') router.push(`/team/${code}/complete`);
+  }, [teamStatus, code, router]);
+
   const handleJoin = async (memberNo: number) => {
-    setError('');
     setJoining(memberNo);
+    setError('');
     try {
       const res = await fetch(`/api/teams/${code}/members`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ memberNo }),
       });
-
       const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || 'Could not join');
-        setJoining(null);
-        return;
+      if (res.ok) {
+        router.push(`/team/${code}/member/${memberNo}`);
+      } else {
+        setError(data.error || 'Failed to join.');
+        await fetchStatus();
       }
-
-      router.push(`/team/${code}/member/${memberNo}`);
     } catch {
-      setError('Network error. Try again.');
+      setError('Network error.');
+    } finally {
       setJoining(null);
     }
   };
 
-  // If team is in unlocking or later state, redirect appropriately
-  useEffect(() => {
-    if (teamStatus === 'unlocking') {
-      router.push(`/team/${code}/unlock`);
-    } else if (teamStatus === 'round2') {
-      router.push(`/team/${code}/round2`);
-    } else if (teamStatus === 'completed') {
-      router.push(`/team/${code}/complete`);
-    }
-  }, [teamStatus, code, router]);
+  const getMemberState = (m: MemberData) => {
+    if (m.isSubmitted) return 'submitted';
+    if (m.isJoined) return 'active';
+    return 'available';
+  };
 
-  const memberIcons = ['👤', '👤', '👤'];
-  const memberColors = ['#6366f1', '#06b6d4', '#8b5cf6'];
-
-  if (loading) {
-    return (
-      <div className="page-container">
-        <div className="spinner" style={{ width: 40, height: 40 }} />
-      </div>
-    );
-  }
+  const stateConfig = {
+    available: {
+      icon: User,
+      badge: 'Available',
+      badgeClass: 'badge-success',
+      color: 'var(--accent-success)',
+    },
+    active: {
+      icon: Loader2,
+      badge: 'In Progress',
+      badgeClass: 'badge-warning',
+      color: 'var(--accent-warning)',
+    },
+    submitted: {
+      icon: Check,
+      badge: 'Submitted',
+      badgeClass: 'badge-info',
+      color: 'var(--accent-primary)',
+    },
+  };
 
   return (
-    <div className="page-container">
-      <div className="animate-fade-in" style={{ maxWidth: 700, width: '100%', textAlign: 'center' }}>
-        {/* Header */}
-        <div style={{ marginBottom: 12 }}>
-          <span className="badge badge-info">Team {code}</span>
-          {setName && <span className="badge badge-warning" style={{ marginLeft: 8 }}>Set {setName}</span>}
+    <div className="page-container-narrow" style={{ paddingTop: 60 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        style={{ textAlign: 'center', marginBottom: 48 }}
+      >
+        <div className="badge badge-info" style={{ marginBottom: 16 }}>
+          Team {code} · Set {setName || '...'}
         </div>
-        <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: 8 }}>Choose Your Role</h1>
-        <p style={{ color: 'var(--color-text-muted)', marginBottom: 36 }}>
-          Each member picks a slot. Once joined, the slot is locked.
+        <h1 style={{ fontSize: '2rem', marginBottom: 8 }}>Select Your Slot</h1>
+        <p style={{ color: 'var(--text-secondary)' }}>
+          Choose a member slot to begin debugging. Each member gets a unique code challenge.
         </p>
+      </motion.div>
 
-        {error && (
-          <div style={{ color: 'var(--color-danger)', fontSize: '0.85rem', marginBottom: 20, padding: '10px 14px', background: 'rgba(239,68,68,0.1)', borderRadius: 8 }}>
-            {error}
-          </div>
-        )}
+      <div style={{ display: 'grid', gap: 16, maxWidth: 480, margin: '0 auto' }}>
+        {members.map((m, i) => {
+          const state = getMemberState(m);
+          const config = stateConfig[state];
+          const StateIcon = config.icon;
+          const isAvailable = state === 'available';
 
-        {/* Member Slots */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-          {members.map((m, i) => (
-            <button
+          return (
+            <motion.div
               key={m.memberNo}
-              className={`member-slot animate-fade-in-delay-${i + 1} ${m.isJoined ? 'taken' : ''}`}
-              onClick={() => !m.isJoined && handleJoin(m.memberNo)}
-              disabled={m.isJoined || joining !== null}
-              style={{ borderTopColor: m.isJoined ? undefined : memberColors[i] }}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 + i * 0.1 }}
+              className="glow-card"
+              onClick={() => isAvailable && handleJoin(m.memberNo)}
+              style={{
+                padding: 24,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                cursor: isAvailable ? 'pointer' : 'default',
+                opacity: !isAvailable ? 0.7 : 1,
+              }}
             >
-              <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>{memberIcons[i]}</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 4 }}>
-                Member {m.memberNo}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 12,
+                    background: `${config.color}15`,
+                    border: `1px solid ${config.color}30`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <StateIcon size={20} style={{ color: config.color }} />
+                </div>
+                <div>
+                  <p style={{ fontWeight: 600, fontSize: '1rem' }}>Member {m.memberNo}</p>
+                  <div className={`badge ${config.badgeClass}`} style={{ marginTop: 4 }}>
+                    {config.badge}
+                  </div>
+                </div>
               </div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: 12 }}>
-                Snippet #{m.memberNo}
-              </div>
-              {m.isJoined ? (
-                <span className="badge badge-danger">Slot Taken</span>
-              ) : joining === m.memberNo ? (
-                <span className="spinner" />
-              ) : (
-                <span className="badge badge-success">Available</span>
-              )}
-            </button>
-          ))}
-        </div>
 
-        <p style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', marginTop: 28 }}>
-          ⟳ Page auto-refreshes every 3 seconds
-        </p>
+              {isAvailable && joining !== m.memberNo && (
+                <ArrowRight size={18} style={{ color: 'var(--text-muted)' }} />
+              )}
+              {joining === m.memberNo && (
+                <Loader2 size={18} style={{ color: 'var(--accent-primary)', animation: 'spin 1s linear infinite' }} />
+              )}
+              {!isAvailable && <Lock size={16} style={{ color: 'var(--text-muted)' }} />}
+            </motion.div>
+          );
+        })}
       </div>
+
+      {error && (
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          style={{ textAlign: 'center', color: 'var(--accent-danger)', marginTop: 16, fontSize: '0.9rem' }}
+        >
+          {error}
+        </motion.p>
+      )}
+
+      <style jsx>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }

@@ -1,15 +1,25 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState, useCallback, useRef, use } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion } from 'motion/react';
 import dynamic from 'next/dynamic';
+import {
+  Play,
+  RotateCcw,
+  Send,
+  CheckCircle,
+  Terminal,
+  AlertCircle,
+  Loader2,
+} from 'lucide-react';
+import CountdownTimer from '@/components/CountdownTimer';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
-export default function MemberPage() {
-  const params = useParams<{ code: string; id: string }>();
-  const code = params.code;
-  const memberNo = parseInt(params.id);
+export default function MemberPage({ params }: { params: Promise<{ code: string; id: string }> }) {
+  const { code, id } = use(params);
+  const memberNo = parseInt(id);
   const router = useRouter();
 
   const [language, setLanguage] = useState('python');
@@ -19,6 +29,7 @@ export default function MemberPage() {
   const [running, setRunning] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [startedAt, setStartedAt] = useState<string | null>(null);
   const [error, setError] = useState('');
   const editorRef = useRef<unknown>(null);
 
@@ -35,6 +46,18 @@ export default function MemberPage() {
     }
   }, [code, memberNo]);
 
+  // Fetch startedAt from team status
+  useEffect(() => {
+    const fetchTimer = async () => {
+      try {
+        const res = await fetch(`/api/teams/${code}/status`);
+        const data = await res.json();
+        if (data.startedAt) setStartedAt(data.startedAt);
+      } catch {/* silent */}
+    };
+    fetchTimer();
+  }, [code]);
+
   useEffect(() => {
     fetchSnippet(language);
   }, [language, fetchSnippet]);
@@ -48,14 +71,12 @@ export default function MemberPage() {
     setError('');
     setOutput('');
     setRunning(true);
-
     try {
       const res = await fetch('/api/compile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ language, code: editorCode, stdin: '' }),
       });
-
       const data = await res.json();
       if (!res.ok) {
         setOutput(`Error: ${data.error}`);
@@ -77,21 +98,18 @@ export default function MemberPage() {
   const handleSubmit = async () => {
     setError('');
     setSubmitting(true);
-
     try {
       const res = await fetch('/api/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ teamCode: code, memberNo, output }),
       });
-
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || 'Submission failed');
         setSubmitting(false);
         return;
       }
-
       setSubmitted(true);
     } catch {
       setError('Network error. Try again.');
@@ -104,64 +122,120 @@ export default function MemberPage() {
     setOutput('');
   };
 
+  const handleTimerExpired = () => {
+    if (!submitted) {
+      // Auto-submit with whatever output we have
+      handleSubmit();
+    }
+  };
+
+  const LANG_LABELS: Record<string, string> = { python: 'Python', c: 'C', java: 'Java' };
+
+  // ─── Submitted State ───
   if (submitted) {
     return (
-      <div className="page-container">
-        <div className="glass-card animate-fade-in" style={{ maxWidth: 520, width: '100%', padding: '48px 40px', textAlign: 'center' }}>
-          <div style={{ fontSize: '4rem', marginBottom: 16 }} className="checkmark-bounce">✅</div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 12 }}>Output Submitted!</h2>
-          <p style={{ color: 'var(--color-text-muted)', marginBottom: 24 }}>
-            Your submission for Member {memberNo} has been locked. Wait for all teammates to submit.
+      <div className="page-container-narrow" style={{ paddingTop: 80, textAlign: 'center' }}>
+        <motion.div
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', damping: 15 }}
+          className="glass-card"
+          style={{ padding: 48 }}
+        >
+          <CheckCircle size={56} style={{ color: 'var(--accent-success)', marginBottom: 16 }} />
+          <h2 style={{ fontSize: '1.5rem', marginBottom: 8 }}>Output Submitted!</h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>
+            Your submission for Member {memberNo} is locked. Wait for all teammates to submit.
           </p>
-          <button className="btn-secondary" onClick={() => router.push(`/team/${code}/unlock`)}>
-            Go to Team Unlock Page →
+          <button
+            className="btn-primary"
+            onClick={() => router.push(`/team/${code}/unlock`)}
+          >
+            Go to Unlock Page
           </button>
-        </div>
+        </motion.div>
       </div>
     );
   }
 
+  // ─── Editor View ───
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1 }}>
-      {/* Top Bar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', background: 'rgba(15,23,42,0.9)', borderBottom: '1px solid var(--color-border)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontWeight: 700, fontSize: '1.1rem' }}>🔁 Break the Loop</span>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 64px)' }}>
+      {/* ─── Toolbar ─── */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '10px 20px',
+          background: 'var(--bg-secondary)',
+          borderBottom: '1px solid var(--border-subtle)',
+          flexWrap: 'wrap',
+          gap: 12,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <span className="badge badge-info">Team {code}</span>
           <span className="badge badge-warning">Member {memberNo}</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Round 1</span>
-        </div>
-      </div>
 
-      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 400px', gap: 0 }}>
-        {/* Editor Panel */}
-        <div style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--color-border)' }}>
-          {/* Language + Actions Bar */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', background: 'rgba(30,41,59,0.5)', borderBottom: '1px solid var(--color-border)' }}>
-            <div className="lang-selector">
-              {['python', 'c', 'java'].map((lang) => (
-                <button
-                  key={lang}
-                  className={`lang-btn ${language === lang ? 'active' : ''}`}
-                  onClick={() => setLanguage(lang)}
-                >
-                  {lang === 'c' ? 'C' : lang === 'java' ? 'Java' : 'Python'}
-                </button>
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn-secondary" onClick={handleReset} style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
-                ↺ Reset
+          {/* Language Tabs */}
+          <div style={{ display: 'flex', gap: 2, background: 'rgba(255,255,255,0.04)', borderRadius: 'var(--radius-sm)', padding: 2 }}>
+            {['python', 'c', 'java'].map((lang) => (
+              <button
+                key={lang}
+                onClick={() => setLanguage(lang)}
+                style={{
+                  padding: '6px 14px',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  borderRadius: 6,
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  background: language === lang ? 'var(--accent-primary)' : 'transparent',
+                  color: language === lang ? 'white' : 'var(--text-secondary)',
+                }}
+              >
+                {LANG_LABELS[lang]}
               </button>
-              <button className="btn-glow" onClick={handleRun} disabled={running} style={{ padding: '8px 20px', fontSize: '0.85rem' }}>
-                {running ? <><span className="spinner" style={{ width: 16, height: 16 }} /> Running...</> : '▶ Run'}
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <CountdownTimer startedAt={startedAt} onExpired={handleTimerExpired} />
+        </div>
+      </motion.div>
+
+      {/* ─── Main Area ─── */}
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 380px' }}>
+        {/* Editor Column */}
+        <div style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--border-subtle)' }}>
+          {/* Action bar */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '8px 16px', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border-subtle)',
+          }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              {LANG_LABELS[language]} Editor
+            </span>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn-secondary" onClick={handleReset} style={{ padding: '6px 12px', fontSize: '0.8rem' }}>
+                <RotateCcw size={14} /> Reset
+              </button>
+              <button className="btn-primary" onClick={handleRun} disabled={running} style={{ padding: '6px 16px', fontSize: '0.8rem' }}>
+                {running ? (
+                  <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Running</>
+                ) : (
+                  <><Play size={14} /> Run</>
+                )}
               </button>
             </div>
           </div>
 
-          {/* Monaco Editor */}
+          {/* Monaco */}
           <div style={{ flex: 1, minHeight: 400 }}>
             <MonacoEditor
               height="100%"
@@ -179,56 +253,77 @@ export default function MemberPage() {
                 roundedSelection: true,
                 wordWrap: 'on',
                 automaticLayout: true,
+                fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
               }}
             />
           </div>
         </div>
 
-        {/* Output Panel */}
-        <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(15,23,42,0.6)' }}>
-          <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--color-border)', fontWeight: 600, fontSize: '0.9rem' }}>
-            📟 Output Console
+        {/* Output Column */}
+        <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-secondary)' }}>
+          <div style={{
+            padding: '12px 16px', borderBottom: '1px solid var(--border-subtle)',
+            display: 'flex', alignItems: 'center', gap: 8,
+          }}>
+            <Terminal size={14} style={{ color: 'var(--accent-primary)' }} />
+            <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>Output Console</span>
           </div>
+
           <div style={{ flex: 1, padding: 16, overflow: 'auto' }}>
-            <div className="output-console" style={{ height: '100%', minHeight: 300 }}>
+            <pre style={{
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: '0.8rem',
+              lineHeight: 1.6,
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              color: output.includes('Error') || output.includes('Stderr') ? 'var(--accent-danger)' : 'var(--text-primary)',
+              margin: 0,
+            }}>
               {running ? (
-                <span style={{ color: 'var(--color-accent)' }}>⏳ Compiling and running...</span>
+                <span style={{ color: 'var(--accent-primary)' }}>⏳ Compiling and running...</span>
               ) : output ? (
                 output
               ) : (
-                <span style={{ color: '#484f58' }}>Click "Run" to see output here...</span>
+                <span style={{ color: 'var(--text-muted)' }}>Click &quot;Run&quot; to see output here...</span>
               )}
-            </div>
+            </pre>
           </div>
 
           {error && (
-            <div style={{ padding: '8px 16px', color: 'var(--color-danger)', fontSize: '0.85rem', background: 'rgba(239,68,68,0.1)' }}>
-              {error}
+            <div style={{
+              padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.85rem',
+              color: 'var(--accent-danger)', background: 'rgba(234,67,53,0.08)',
+            }}>
+              <AlertCircle size={14} /> {error}
             </div>
           )}
 
           {/* Submit Area */}
-          <div style={{ padding: 16, borderTop: '1px solid var(--color-border)' }}>
+          <div style={{ padding: 16, borderTop: '1px solid var(--border-subtle)' }}>
             <button
-              className="btn-glow"
+              className="btn-primary"
               onClick={handleSubmit}
               disabled={submitting || !output}
-              style={{ width: '100%', padding: '14px' }}
+              style={{ width: '100%', padding: 14, justifyContent: 'center' }}
             >
               {submitting ? (
-                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                  <span className="spinner" style={{ width: 18, height: 18 }} /> Submitting...
-                </span>
+                <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Submitting...</>
               ) : (
-                '📤 Submit Output'
+                <><Send size={16} /> Submit Output</>
               )}
             </button>
-            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem', marginTop: 8, textAlign: 'center' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: 8, textAlign: 'center' }}>
               ⚠ Submission is final and cannot be undone
             </p>
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }

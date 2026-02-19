@@ -1,66 +1,139 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { use } from 'react';
+import { motion } from 'motion/react';
+import { Trophy, PartyPopper, Github, Home } from 'lucide-react';
+import Link from 'next/link';
+import { CONTEST_CONFIG } from '@/lib/config';
 
-export default function CompletePage() {
-  const { code } = useParams<{ code: string }>();
+export default function CompletePage({ params }: { params: Promise<{ code: string }> }) {
+  const { code } = use(params);
+
+  // Generate confetti particles
+  const confetti = Array.from({ length: 24 }, (_, i) => ({
+    id: i,
+    color: Object.values(CONTEST_CONFIG.colors)[i % 4],
+    left: Math.random() * 100,
+    delay: Math.random() * 2,
+    size: 6 + Math.random() * 6,
+    rotation: Math.random() * 360,
+  }));
 
   return (
-    <div className="page-container">
-      <div className="glass-card animate-fade-in" style={{ maxWidth: 560, width: '100%', padding: '56px 40px', textAlign: 'center' }}>
-        {/* Success Animation */}
-        <div style={{ fontSize: '5rem', marginBottom: 20 }} className="checkmark-bounce">
-          🎉
+    <div className="page-container-narrow" style={{ paddingTop: 80, paddingBottom: 80, textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+      {/* Confetti */}
+      {confetti.map((c) => (
+        <motion.div
+          key={c.id}
+          initial={{ y: -50, opacity: 1, rotate: 0 }}
+          animate={{ y: 800, opacity: 0, rotate: c.rotation + 720 }}
+          transition={{ duration: 3 + Math.random() * 2, delay: c.delay, ease: 'easeIn' }}
+          style={{
+            position: 'absolute',
+            top: -20,
+            left: `${c.left}%`,
+            width: c.size,
+            height: c.size,
+            borderRadius: c.id % 3 === 0 ? '50%' : 2,
+            background: c.color,
+            zIndex: 10,
+            pointerEvents: 'none',
+          }}
+        />
+      ))}
+
+      {/* Trophy */}
+      <motion.div
+        initial={{ scale: 0, rotate: -180 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ type: 'spring', damping: 10, delay: 0.3 }}
+        style={{ marginBottom: 24 }}
+      >
+        <div
+          style={{
+            width: 80,
+            height: 80,
+            borderRadius: 20,
+            background: 'linear-gradient(135deg, var(--gdg-yellow), var(--gdg-green))',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Trophy size={40} color="white" />
+        </div>
+      </motion.div>
+
+      {/* Heading */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8 }}>
+          <PartyPopper size={24} style={{ color: 'var(--gdg-yellow)' }} />
+          <h1 style={{ fontSize: '2.5rem' }}>
+            <span className="gradient-text">Well Done!</span>
+          </h1>
+          <PartyPopper size={24} style={{ color: 'var(--gdg-yellow)', transform: 'scaleX(-1)' }} />
         </div>
 
-        <h1 style={{
-          fontSize: '2rem', fontWeight: 800, marginBottom: 12,
-          background: 'linear-gradient(135deg, #22c55e, #06b6d4)',
-          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
-        }}>
-          Submission Received!
-        </h1>
-
-        <p style={{ color: 'var(--color-text-muted)', marginBottom: 32, fontSize: '1rem', lineHeight: 1.6 }}>
-          Team <strong style={{ color: 'var(--color-text)' }}>{code}</strong> has successfully completed the competition.
-          Your submission is now locked.
+        <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', maxWidth: 480, margin: '0 auto', lineHeight: 1.7 }}>
+          Team <strong style={{ color: 'var(--text-primary)' }}>{code}</strong> has successfully completed{' '}
+          <strong style={{ color: 'var(--text-primary)' }}>{CONTEST_CONFIG.name}</strong>.
         </p>
+      </motion.div>
 
-        {/* Confirmation Card */}
-        <div style={{
-          background: 'rgba(34,197,94,0.08)',
-          border: '1px solid rgba(34,197,94,0.2)',
-          borderRadius: 12,
-          padding: '20px 24px',
-          marginBottom: 24
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8 }}>
-            <span style={{ color: '#22c55e', fontSize: '1.2rem' }}>✓</span>
-            <span style={{ fontWeight: 600, color: '#4ade80' }}>Round 1 — Completed</span>
+      {/* Summary Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.7 }}
+        className="glass-card"
+        style={{ padding: 32, marginTop: 40, maxWidth: 420, margin: '40px auto 0' }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, textAlign: 'left' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span className="badge badge-success">Round 1</span>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Debug Phase — Completed</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-            <span style={{ color: '#22c55e', fontSize: '1.2rem' }}>✓</span>
-            <span style={{ fontWeight: 600, color: '#4ade80' }}>Round 2 — Submitted</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span className="badge badge-success">Round 2</span>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Build Phase — Submitted</span>
           </div>
         </div>
+      </motion.div>
 
-        <div style={{
-          background: 'var(--color-surface)',
-          border: '1px solid var(--color-border)',
-          borderRadius: 12,
-          padding: '16px 20px',
-        }}>
-          <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
-            🔒 Your submission is locked and cannot be modified. The judges will review all submissions. Good luck!
-          </p>
-        </div>
+      {/* Actions */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.9 }}
+        style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 32 }}
+      >
+        <Link href="/" className="btn-secondary" style={{ padding: '10px 20px', fontSize: '0.85rem' }}>
+          <Home size={14} /> Back Home
+        </Link>
+        <a
+          href={CONTEST_CONFIG.orgUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-secondary"
+          style={{ padding: '10px 20px', fontSize: '0.85rem' }}
+        >
+          <Github size={14} /> GDG GitHub
+        </a>
+      </motion.div>
 
-        <div style={{ marginTop: 32 }}>
-          <p style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>
-            Thank you for participating in <strong>Break the Loop</strong>! 🚀
-          </p>
-        </div>
-      </div>
+      {/* Footer message */}
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.1 }}
+        style={{ marginTop: 48, color: 'var(--text-muted)', fontSize: '0.8rem' }}
+      >
+        Thank you for participating! Results will be announced by {CONTEST_CONFIG.organizer}.
+      </motion.p>
     </div>
   );
 }

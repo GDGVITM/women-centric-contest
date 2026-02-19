@@ -1,89 +1,122 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
+import { use } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion } from 'motion/react';
+import {
+  Lightbulb,
+  ArrowRight,
+  Target,
+  Users,
+  BarChart3,
+} from 'lucide-react';
 
-export default function Round2Page() {
-  const { code } = useParams<{ code: string }>();
+const PROBLEM_STATEMENT = {
+  title: 'Women Safety Dashboard',
+  objective: `Design and build a Women Safety Dashboard that visualizes safety data and provides actionable insights for communities.`,
+  requirements: [
+    {
+      icon: Target,
+      title: 'Data Visualization',
+      text: 'Display safety statistics with interactive charts and graphs',
+    },
+    {
+      icon: Users,
+      title: 'Community Focus',
+      text: 'Highlight local safety resources, emergency contacts, and community programs',
+    },
+    {
+      icon: BarChart3,
+      title: 'Analytics',
+      text: 'Provide trend analysis and safety score metrics for neighborhoods',
+    },
+  ],
+};
+
+export default function Round2Page({ params }: { params: Promise<{ code: string }> }) {
+  const { code } = use(params);
   const router = useRouter();
 
   return (
-    <div className="page-container">
-      <div className="glass-card animate-fade-in" style={{ maxWidth: 720, width: '100%', padding: '48px 40px' }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 12 }}>
-            <span className="badge badge-info">Team {code}</span>
-            <span className="badge badge-success">Round 2</span>
-          </div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: 8 }}>
-            🧩 Round 2 — Problem Statement
-          </h1>
-          <p style={{ color: 'var(--color-text-muted)' }}>
-            This problem is common for all teams.
-          </p>
-        </div>
+    <div className="page-container-narrow" style={{ paddingTop: 60, paddingBottom: 60 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        style={{ textAlign: 'center', marginBottom: 40 }}
+      >
+        <div className="badge badge-success" style={{ marginBottom: 16 }}>Round 2</div>
+        <h1 style={{ fontSize: '2rem', marginBottom: 8 }}>
+          <span className="gradient-text">Problem Statement</span>
+        </h1>
+        <p style={{ color: 'var(--text-secondary)' }}>
+          Collaborate with your team to build a solution.
+        </p>
+      </motion.div>
 
-        {/* Problem Statement */}
-        <div style={{
-          background: 'var(--color-surface)',
-          border: '1px solid var(--color-border)',
-          borderRadius: 12,
-          padding: '28px 24px',
-          marginBottom: 32,
-          lineHeight: 1.7
-        }}>
-          <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: 16, color: 'var(--color-accent)' }}>
-            🏗️ Build a Smart Solution
-          </h2>
-          <p style={{ marginBottom: 16, color: 'var(--color-text)' }}>
-            Design and implement a <strong>dashboard / tool / mini-app</strong> that solves a real-world problem
-            using technology. Your solution should demonstrate:
-          </p>
-          <ul style={{ paddingLeft: 24, marginBottom: 16, color: 'var(--color-text)', listStyleType: 'disc' }}>
-            <li style={{ marginBottom: 8 }}>
-              <strong>Problem Identification:</strong> Clearly define the problem you are solving
-            </li>
-            <li style={{ marginBottom: 8 }}>
-              <strong>Technical Implementation:</strong> Use any tech stack (web, mobile, CLI, etc.)
-            </li>
-            <li style={{ marginBottom: 8 }}>
-              <strong>Innovation &amp; Creativity:</strong> Show a unique approach or creative twist
-            </li>
-            <li style={{ marginBottom: 8 }}>
-              <strong>Team Collaboration:</strong> All 3 members must contribute to the solution
-            </li>
-          </ul>
-
-          <div style={{
-            background: 'rgba(99,102,241,0.1)',
-            border: '1px solid rgba(99,102,241,0.2)',
-            borderRadius: 8,
-            padding: '16px',
-            marginTop: 16
-          }}>
-            <p style={{ fontWeight: 600, color: 'var(--color-primary)', marginBottom: 8, fontSize: '0.9rem' }}>
-              📌 Submission Requirements
-            </p>
-            <ul style={{ paddingLeft: 20, color: 'var(--color-text-muted)', fontSize: '0.9rem', listStyleType: 'circle' }}>
-              <li>Solution Title</li>
-              <li>Written explanation of your approach</li>
-              <li>Key features of your solution</li>
-              <li>Dashboard / Demo link (if applicable)</li>
-            </ul>
-          </div>
+      {/* Problem Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="glass-card"
+        style={{ padding: 32, marginBottom: 24 }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+          <Lightbulb size={20} style={{ color: 'var(--accent-warning)' }} />
+          <h2 style={{ fontSize: '1.2rem' }}>{PROBLEM_STATEMENT.title}</h2>
         </div>
+        <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 24 }}>
+          {PROBLEM_STATEMENT.objective}
+        </p>
 
-        {/* Proceed Button */}
-        <div style={{ textAlign: 'center' }}>
-          <button
-            className="btn-glow"
-            onClick={() => router.push(`/team/${code}/round2/submit`)}
-            style={{ padding: '16px 40px', fontSize: '1.05rem' }}
-          >
-            📝 Proceed to Submission →
-          </button>
+        <hr className="divider" />
+
+        <h3 style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          Requirements
+        </h3>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {PROBLEM_STATEMENT.requirements.map((req, i) => (
+            <motion.div
+              key={req.title}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 + i * 0.1 }}
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 12,
+                padding: 16,
+                borderRadius: 'var(--radius-md)',
+                background: 'rgba(255,255,255,0.02)',
+                border: '1px solid var(--border-subtle)',
+              }}
+            >
+              <req.icon size={18} style={{ color: 'var(--accent-primary)', flexShrink: 0, marginTop: 2 }} />
+              <div>
+                <p style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 4 }}>{req.title}</p>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{req.text}</p>
+              </div>
+            </motion.div>
+          ))}
         </div>
-      </div>
+      </motion.div>
+
+      {/* CTA */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6 }}
+        style={{ textAlign: 'center' }}
+      >
+        <button
+          className="btn-primary"
+          onClick={() => router.push(`/team/${code}/round2/submit`)}
+          style={{ padding: '14px 32px' }}
+        >
+          Begin Submission <ArrowRight size={16} />
+        </button>
+      </motion.div>
     </div>
   );
 }

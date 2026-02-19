@@ -1,156 +1,209 @@
 'use client';
 
-import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, use } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion } from 'motion/react';
+import {
+  Send,
+  Type,
+  FileText,
+  Star,
+  Link2,
+  Loader2,
+  AlertCircle,
+} from 'lucide-react';
+import { CONTEST_CONFIG } from '@/lib/config';
 
-export default function Round2SubmitPage() {
-  const { code } = useParams<{ code: string }>();
+export default function Round2SubmitPage({ params }: { params: Promise<{ code: string }> }) {
+  const { code } = use(params);
   const router = useRouter();
 
-  const [solutionTitle, setSolutionTitle] = useState('');
-  const [solutionText, setSolutionText] = useState('');
-  const [keyFeatures, setKeyFeatures] = useState('');
-  const [dashboardUrl, setDashboardUrl] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState({
+    solutionTitle: '',
+    solutionText: '',
+    keyFeatures: '',
+    dashboardUrl: '',
+  });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (field: string, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setError('');
+  };
 
   const handleSubmit = async () => {
-    if (!solutionTitle.trim() || !solutionText.trim() || !keyFeatures.trim()) {
+    if (!form.solutionTitle.trim() || !form.solutionText.trim() || !form.keyFeatures.trim()) {
       setError('Please fill in all required fields.');
       return;
     }
 
+    setLoading(true);
     setError('');
-    setSubmitting(true);
 
     try {
       const res = await fetch(`/api/teams/${code}/round2`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          solutionTitle: solutionTitle.trim(),
-          solutionText: solutionText.trim(),
-          keyFeatures: keyFeatures.trim(),
-          dashboardUrl: dashboardUrl.trim(),
-        }),
+        body: JSON.stringify(form),
       });
 
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || 'Submission failed.');
-        setSubmitting(false);
         return;
       }
 
       router.push(`/team/${code}/complete`);
     } catch {
-      setError('Network error. Try again.');
-      setSubmitting(false);
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
+  const fields = [
+    {
+      key: 'solutionTitle',
+      label: 'Solution Title',
+      icon: Type,
+      max: CONTEST_CONFIG.maxSolutionTitleLength,
+      type: 'input' as const,
+      placeholder: 'e.g. SafeHer — A Women Safety Dashboard',
+    },
+    {
+      key: 'solutionText',
+      label: 'Solution Description',
+      icon: FileText,
+      max: CONTEST_CONFIG.maxSolutionTextLength,
+      type: 'textarea' as const,
+      placeholder: 'Describe your approach, architecture, and how it solves the problem...',
+    },
+    {
+      key: 'keyFeatures',
+      label: 'Key Features',
+      icon: Star,
+      max: CONTEST_CONFIG.maxKeyFeaturesLength,
+      type: 'textarea' as const,
+      placeholder: '• Interactive heat maps\n• Emergency SOS integration\n• Community safety ratings...',
+    },
+    {
+      key: 'dashboardUrl',
+      label: 'Dashboard URL (optional)',
+      icon: Link2,
+      max: CONTEST_CONFIG.maxDashboardUrlLength,
+      type: 'input' as const,
+      placeholder: 'https://your-dashboard.vercel.app',
+    },
+  ];
+
   return (
-    <div className="page-container" style={{ paddingTop: 40, paddingBottom: 40 }}>
-      <div className="glass-card animate-fade-in" style={{ maxWidth: 680, width: '100%', padding: '40px 36px' }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 12 }}>
-            <span className="badge badge-info">Team {code}</span>
-            <span className="badge badge-success">Round 2</span>
-          </div>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: 8 }}>
-            📝 Final Submission
-          </h1>
-          <p style={{ color: 'var(--color-text-muted)' }}>
-            Submit your team's solution below. This is final and cannot be edited.
-          </p>
-        </div>
+    <div className="page-container-narrow" style={{ paddingTop: 60, paddingBottom: 60 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        style={{ textAlign: 'center', marginBottom: 40 }}
+      >
+        <div className="badge badge-success" style={{ marginBottom: 16 }}>Round 2 · Submission</div>
+        <h1 style={{ fontSize: '2rem', marginBottom: 8 }}>
+          <span className="gradient-text">Submit Your Solution</span>
+        </h1>
+        <p style={{ color: 'var(--text-secondary)' }}>
+          Tell us about what you built.
+        </p>
+      </motion.div>
 
-        {/* Form */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: 6, fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Solution Title *
-            </label>
-            <input
-              type="text"
-              className="input-glow"
-              placeholder="e.g. Smart Campus Navigation System"
-              value={solutionTitle}
-              onChange={(e) => setSolutionTitle(e.target.value)}
-              disabled={submitting}
-            />
-          </div>
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="glass-card"
+        style={{ padding: 32 }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          {fields.map((f, i) => {
+            const val = form[f.key as keyof typeof form];
+            const isRequired = f.key !== 'dashboardUrl';
+            return (
+              <motion.div
+                key={f.key}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 + i * 0.08 }}
+              >
+                <div style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8,
+                }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, fontSize: '0.9rem' }}>
+                    <f.icon size={14} style={{ color: 'var(--accent-primary)' }} />
+                    {f.label}
+                    {isRequired && <span style={{ color: 'var(--accent-danger)' }}>*</span>}
+                  </label>
+                  <span style={{
+                    fontSize: '0.75rem',
+                    color: val.length > f.max * 0.9 ? 'var(--accent-warning)' : 'var(--text-muted)',
+                  }}>
+                    {val.length}/{f.max}
+                  </span>
+                </div>
 
-          <div>
-            <label style={{ display: 'block', marginBottom: 6, fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Solution Explanation *
-            </label>
-            <textarea
-              className="textarea-glow"
-              placeholder="Describe your approach, architecture, and how it solves the problem..."
-              value={solutionText}
-              onChange={(e) => setSolutionText(e.target.value)}
-              disabled={submitting}
-              rows={6}
-            />
-          </div>
-
-          <div>
-            <label style={{ display: 'block', marginBottom: 6, fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Key Features *
-            </label>
-            <textarea
-              className="textarea-glow"
-              placeholder="List the key features of your solution, one per line..."
-              value={keyFeatures}
-              onChange={(e) => setKeyFeatures(e.target.value)}
-              disabled={submitting}
-              rows={4}
-            />
-          </div>
-
-          <div>
-            <label style={{ display: 'block', marginBottom: 6, fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Dashboard / Demo Link (optional)
-            </label>
-            <input
-              type="url"
-              className="input-glow"
-              placeholder="https://..."
-              value={dashboardUrl}
-              onChange={(e) => setDashboardUrl(e.target.value)}
-              disabled={submitting}
-            />
-          </div>
+                {f.type === 'input' ? (
+                  <input
+                    className="input-field"
+                    type="text"
+                    placeholder={f.placeholder}
+                    value={val}
+                    onChange={(e) => handleChange(f.key, e.target.value)}
+                    maxLength={f.max}
+                  />
+                ) : (
+                  <textarea
+                    className="textarea-field"
+                    placeholder={f.placeholder}
+                    value={val}
+                    onChange={(e) => handleChange(f.key, e.target.value)}
+                    maxLength={f.max}
+                    rows={f.key === 'solutionText' ? 6 : 4}
+                  />
+                )}
+              </motion.div>
+            );
+          })}
         </div>
 
         {error && (
-          <div style={{ color: 'var(--color-danger)', fontSize: '0.85rem', marginTop: 16, padding: '10px 14px', background: 'rgba(239,68,68,0.1)', borderRadius: 8 }}>
-            {error}
-          </div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              marginTop: 16, padding: '10px 16px', borderRadius: 'var(--radius-md)',
+              background: 'rgba(234,67,53,0.08)', color: 'var(--accent-danger)', fontSize: '0.85rem',
+            }}
+          >
+            <AlertCircle size={14} /> {error}
+          </motion.div>
         )}
 
-        <div style={{ marginTop: 28, textAlign: 'center' }}>
-          <button
-            className="btn-glow"
-            onClick={handleSubmit}
-            disabled={submitting || !solutionTitle.trim() || !solutionText.trim() || !keyFeatures.trim()}
-            style={{ padding: '16px 40px', fontSize: '1.05rem' }}
-          >
-            {submitting ? (
-              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                <span className="spinner" style={{ width: 18, height: 18 }} /> Submitting...
-              </span>
-            ) : (
-              '🚀 Final Submit'
-            )}
-          </button>
-          <p style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem', marginTop: 10 }}>
-            ⚠ This submission is final and cannot be edited after submitting
-          </p>
-        </div>
-      </div>
+        <button
+          className="btn-primary"
+          onClick={handleSubmit}
+          disabled={loading}
+          style={{ width: '100%', marginTop: 24, padding: 14, justifyContent: 'center' }}
+        >
+          {loading ? (
+            <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Submitting...</>
+          ) : (
+            <><Send size={16} /> Submit Solution</>
+          )}
+        </button>
+      </motion.div>
+
+      <style jsx>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
