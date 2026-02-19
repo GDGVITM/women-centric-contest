@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Set {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique // A, B, C, D
+  unlockKey String    // 6-digit key
+  createdAt DateTime  @default(now())
+  snippets  Snippet[]
+  teams     Team[]
+}
+
+model Snippet {
+  id       Int    @id @default(autoincrement())
+  setId    Int
+  memberNo Int    // 1, 2, 3
+  language String // c, java, python
+  code     String
+  set      Set    @relation(fields: [setId], references: [id])
+
+  @@unique([setId, memberNo, language])
+}
+
+model Team {
+  id                Int                @id @default(autoincrement())
+  teamCode          String             @unique // T01-T20
+  setId             Int
+  status            String             @default("waiting") // waiting, round1, unlocking, round2, completed
+  createdAt         DateTime           @default(now())
+  set               Set                @relation(fields: [setId], references: [id])
+  members           Member[]
+  keyAttempts       KeyAttempt[]
+  round2Submission  Round2Submission?
+}
+
+model Member {
+  id          Int       @id @default(autoincrement())
+  teamId      Int
+  memberNo    Int       // 1, 2, 3
+  isJoined    Boolean   @default(false)
+  joinedAt    DateTime?
+  isSubmitted Boolean   @default(false)
+  output      String?
+  submittedAt DateTime?
+  team        Team      @relation(fields: [teamId], references: [id])
+
+  @@unique([teamId, memberNo])
+}
+
+model KeyAttempt {
+  id           Int      @id @default(autoincrement())
+  teamId       Int
+  attemptValue String
+  isCorrect    Boolean  @default(false)
+  attemptedAt  DateTime @default(now())
+  team         Team     @relation(fields: [teamId], references: [id])
+}
+
+model Round2Submission {
+  id           Int      @id @default(autoincrement())
+  teamId       Int      @unique
+  solutionTitle String
+  solutionText  String
+  keyFeatures   String
+  dashboardUrl  String?
+  submittedAt   DateTime @default(now())
+  team          Team     @relation(fields: [teamId], references: [id])
+}
