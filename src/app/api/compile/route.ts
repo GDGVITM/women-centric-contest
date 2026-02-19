@@ -17,7 +17,7 @@ const FILENAMES: Record<string, string> = {
 
 export async function POST(req: NextRequest) {
     try {
-        const { language, code, stdin } = await req.json();
+        const { language, code, stdin, teamCode, memberId } = await req.json();
 
         if (!language || !code) {
             return NextResponse.json({ error: 'Language and code are required.' }, { status: 400 });
@@ -60,13 +60,46 @@ export async function POST(req: NextRequest) {
         }
 
         const result = await response.json();
+        const stdout = result.run?.stdout || '';
+
+        // --- Validation Logic ---
+        let isCorrect = false;
+
+        if (teamCode && memberId) {
+            try {
+                 // Lazy load config to check answer
+                 // We don't cache this to allow hot-reloading keys
+                 const teamsPath = require('path').join(process.cwd(), 'src/config/teams.json');
+                 const problemsPath = require('path').join(process.cwd(), 'src/config/problems.json');
+                 const fs = require('fs');
+                 
+                 const teams = JSON.parse(fs.readFileSync(teamsPath, 'utf-8'));
+                 const team = teams.find((t: any) => t.teamCode === teamCode);
+                 
+                 if (team) {
+                     const problems = JSON.parse(fs.readFileSync(problemsPath, 'utf-8'));
+                     const problem = problems[team.set]?.[memberId]?.[language];
+                     
+                     // Handle { code, expectedOutput } structure
+                     const expected = problem?.expectedOutput;
+                     
+                     if (expected && stdout.trim() === expected.trim()) {
+                         isCorrect = true;
+                     }
+                 }
+            } catch (e) {
+                console.error("Validation check failed", e);
+            }
+        }
 
         return NextResponse.json({
-            stdout: result.run?.stdout || '',
+            stdout: stdout,
             stderr: result.run?.stderr || result.compile?.stderr || '',
             exitCode: result.run?.code ?? -1,
             compileOutput: result.compile?.output || '',
+            isCorrect // Frontend uses this to enable Submit
         });
+
     } catch (err) {
         console.error('[Compile API] Error:', err);
         return NextResponse.json(

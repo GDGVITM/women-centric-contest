@@ -459,12 +459,12 @@ async function main() {
   await prisma.member.deleteMany();
   await prisma.team.deleteMany();
   await prisma.snippet.deleteMany();
-  await prisma.set.deleteMany();
+  await prisma.problemSet.deleteMany();
 
   // Create sets
   const sets: Record<string, { id: number }> = {};
   for (const setName of ['A', 'B', 'C', 'D']) {
-    sets[setName] = await prisma.set.create({
+    sets[setName] = await prisma.problemSet.create({
       data: {
         name: setName,
         unlockKey: unlockKeys[setName]
@@ -496,6 +496,7 @@ async function main() {
     const team = await prisma.team.create({
       data: {
         teamCode,
+        name: `Team ${i}`,
         setId: sets[assignedSet].id,
         status: 'waiting'
       }
@@ -507,6 +508,7 @@ async function main() {
         data: {
           teamId: team.id,
           memberNo: m,
+          name: `Member ${m}`,
           isJoined: false,
           isSubmitted: false
         }

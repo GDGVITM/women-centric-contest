@@ -250,3 +250,88 @@ npx prisma db seed
 ## 📄 License
 
 This project is maintained by **GDG on Campus VIT-M**.
+
+---
+
+## 🛠️ Configuration & Admin (Event Day Setup)
+
+### 1. JSON Configuration
+
+## 🏁 Organizer Setup Guide (Event Day)
+
+### 1. Hybrid Deployment Strategy
+
+The contest runs in a **Hybrid Mode** to save costs and ensure security:
+
+- **Frontend & API (Vercel)**: Hosts the UI and game logic. Accessible to all students via a public URL.
+- **Code Execution Engine (Local Piston)**: Runs on the **Organizer's Laptop** (or a cloud VM) and is exposed via a secure tunnel (ngrok).
+
+### 2. Setting up the Execution Engine (Organizer's Laptop)
+
+1. **Install Docker**: Download Docker Desktop.
+2. **Run Piston**:
+   ```bash
+   docker run -d -p 2000:2000 --name piston ghcr.io/engineer-man/piston
+   ```
+3. **Expose with Ngrok**:
+   ```bash
+   ngrok http 2000
+   ```
+4. **Copy the URL**: You will get a URL like `https://fd7a-123-456.ngrok-free.app`.
+
+### 3. Deploying the Frontend (Vercel)
+
+1. Push this code to GitHub.
+2. Import the repo in Vercel.
+3. **Environment Variables**:
+   - `PISTON_API_URL`: `https://your-ngrok-url.ngrok-free.app/api/v2/execute` (The URL from Step 2)
+   - `ADMIN_SECRET`: `your_secure_password`
+   - `DATABASE_URL`: Your Postgres connection string.
+4. Redeploy.
+
+### 4. Game Management
+
+- **Dashboard**: Go to `/admin/login` (Link in landing page footer).
+- **Reset Teams**: If a team messes up or needs a restart, use the **Reset** button.
+- **Live Stats**: Monitor the dashboard to see solving progress.
+
+### 5. Config Changes (Hot-swapping)
+
+To change questions or keys during the event without redeploying logic:
+
+1. Update `src/config/problems.json` or `keys.json`.
+2. Commit and Push to GitHub.
+3. Vercel will auto-redeploy in ~30 seconds.
+
+The contest data is decoupled from the database for easy hot-swapping. Edit files in `src/config/`:
+
+- **`teams.json`**: List of valid Team Codes and their Set assignment (A/B/C/D).
+  ```json
+  [{ "teamCode": "T01", "name": "Team One", "members": 3, "set": "A" }]
+  ```
+- **`keys.json`**: Unlock keys for each Set (Round 1 -> Round 2).
+  ```json
+  { "A": "482917", "B": "735261" }
+  ```
+- **`problems.json`**: Buggy code snippets organized by `Set -> Member -> Language`.
+  ```json
+  {
+    "A": {
+      "1": { "python": "...", "c": "..." }
+    }
+  ```
+
+> **Note**: Changes to these files reflect immediately (on next request) without restarting the server.
+
+### 2. Admin Dashboard
+
+Monitor team progress and submissions at `/admin`.
+
+- **Login**: `/admin/login`
+- **Password**: Set in `.env` as `ADMIN_SECRET`. Default: `gdgvitm_admin_secure_2024`.
+
+### 3. Quick Setup
+
+1.  Ensure `.env` has `DATABASE_URL` and `ADMIN_SECRET`.
+2.  Run `npx prisma generate` and `npx prisma db push` to sync schema.
+3.  Start server: `npm run dev` (or build for production).

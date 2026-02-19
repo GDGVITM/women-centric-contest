@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { CONTEST_CONFIG } from '@/lib/config';
+import fs from 'fs/promises';
+import path from 'path';
 
 export async function POST(
     req: NextRequest,
@@ -14,35 +15,45 @@ export async function POST(
             return NextResponse.json({ error: 'Key must be 6 digits.' }, { status: 400 });
         }
 
+        const normalizedCode = code.toUpperCase().trim();
+
+        // 1. Get Team Config to find Set
+        const teamsConfigPath = path.join(process.cwd(), 'src/config/teams.json');
+        const teamsFile = await fs.readFile(teamsConfigPath, 'utf-8');
+        const teamsConfig = JSON.parse(teamsFile);
+        const teamData = teamsConfig.find((t: any) => t.teamCode === normalizedCode);
+
+        if (!teamData) {
+            return NextResponse.json({ error: 'Team config not found.' }, { status: 404 });
+        }
+
+        // 2. Get Correct Key from keys.json
+        const keysConfigPath = path.join(process.cwd(), 'src/config/keys.json');
+        const keysFile = await fs.readFile(keysConfigPath, 'utf-8');
+        const keysConfig = JSON.parse(keysFile);
+        
+        const correctKey = keysConfig[teamData.set];
+
+        if (!correctKey) {
+            return NextResponse.json({ error: 'Key config missing for this Set.' }, { status: 500 });
+        }
+
+        // 3. Verify Team in DB (to update status)
         const team = await prisma.team.findUnique({
-            where: { teamCode: code },
-            include: { set: true },
+            where: { teamCode: normalizedCode },
         });
 
         if (!team) {
-            return NextResponse.json({ error: 'Team not found.' }, { status: 404 });
+             return NextResponse.json({ error: 'Team not initialized in DB. Please join first.' }, { status: 404 });
         }
 
         if (team.status !== 'unlocking') {
-            return NextResponse.json({ error: 'Not all members have submitted yet.' }, { status: 403 });
+            return NextResponse.json({ error: 'Not ready to unlock (status: ' + team.status + ')' }, { status: 403 });
         }
 
-        // Rate limit: check existing attempts
-        const attemptCount = await prisma.keyAttempt.count({
-            where: { teamId: team.id },
-        });
+        const isCorrect = key === correctKey;
 
-        if (attemptCount >= CONTEST_CONFIG.maxUnlockAttempts) {
-            return NextResponse.json({
-                error: `Maximum ${CONTEST_CONFIG.maxUnlockAttempts} attempts reached. Contact an organizer.`,
-                locked: true,
-                attempts: attemptCount,
-            }, { status: 429 });
-        }
-
-        const isCorrect = key === team.set.unlockKey;
-
-        // Record attempt
+        // Record attempt (Unlimited attempts, just logging)
         await prisma.keyAttempt.create({
             data: {
                 teamId: team.id,
@@ -64,10 +75,10 @@ export async function POST(
             success: false,
             unlocked: false,
             message: 'Incorrect key. Try again.',
-            attempts: attemptCount + 1,
-            maxAttempts: CONTEST_CONFIG.maxUnlockAttempts,
         });
-    } catch {
+
+    } catch (err: any) {
+        console.error('[Unlock API] Error:', err);
         return NextResponse.json({ error: 'Server error' }, { status: 500 });
     }
 }

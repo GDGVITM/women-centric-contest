@@ -70,7 +70,7 @@ export default function TeamPage({ params }: { params: Promise<{ code: string }>
   if (loading) return null;
 
   return (
-    <div className="container-narrow" style={{ paddingTop: 100, paddingBottom: 60 }}>
+    <div className="container-narrow" style={{ paddingTop: 120, paddingBottom: 60 }}>
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}

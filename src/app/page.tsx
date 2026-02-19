@@ -37,17 +37,25 @@ export default function LandingPage() {
         body: JSON.stringify({ teamCode }),
       });
 
-      const data = await res.json();
+      let data;
+      try {
+        data = await res.json();
+      } catch (e) {
+        console.error('Failed to parse JSON:', e);
+        throw new Error(`Server returned ${res.status}: ${res.statusText}`);
+      }
 
       if (!res.ok) {
-        setError(data.error || 'Failed to join.');
+        setError(data.error || `Failed to join (${res.status})`);
         setLoading(false);
         return;
       }
 
-      router.push(`/team/${data.teamCode}`);
-    } catch {
-      setError('Network error. Please try again.');
+      // Redirect to Login Page first
+      router.push(`/team/${data.teamCode}/login`);
+    } catch (err: any) {
+      console.error('Join error:', err);
+      setError(err.message || 'Network error. Please try again.');
       setLoading(false);
     }
   };
@@ -279,6 +287,13 @@ export default function LandingPage() {
              <a href={CONTEST_CONFIG.orgUrl} target="_blank" className="btn-secondary">
                <Globe size={16} /> Visit GDG Website
              </a>
+             <button 
+                onClick={() => router.push('/admin/login')}
+                className="btn-secondary"
+                style={{ opacity: 0.5 }}
+             >
+                <ShieldCheck size={16} /> Admin
+             </button>
          </div>
       </section>
 

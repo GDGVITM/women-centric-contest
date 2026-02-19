@@ -7,7 +7,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Set {
+
+model ProblemSet {
   id        Int       @id @default(autoincrement())
   name      String    @unique // A, B, C, D
   unlockKey String    // 6-digit key
@@ -17,12 +18,12 @@ model Set {
 }
 
 model Snippet {
-  id       Int    @id @default(autoincrement())
+  id       Int        @id @default(autoincrement())
   setId    Int
-  memberNo Int    // 1, 2, 3
-  language String // c, java, python
+  memberNo Int        // 1, 2, 3
+  language String     // c, java, python
   code     String
-  set      Set    @relation(fields: [setId], references: [id])
+  set      ProblemSet @relation(fields: [setId], references: [id])
 
   @@unique([setId, memberNo, language])
 }
@@ -30,11 +31,12 @@ model Snippet {
 model Team {
   id                Int                @id @default(autoincrement())
   teamCode          String             @unique // T01-T20
+  name              String             // Added name field
   setId             Int
   status            String             @default("waiting") // waiting, round1, unlocking, round2, completed
   startedAt         DateTime?          // When Round 1 timer started
   createdAt         DateTime           @default(now())
-  set               Set                @relation(fields: [setId], references: [id])
+  set               ProblemSet         @relation(fields: [setId], references: [id])
   members           Member[]
   keyAttempts       KeyAttempt[]
   round2Submission  Round2Submission?
@@ -44,6 +46,7 @@ model Member {
   id          Int       @id @default(autoincrement())
   teamId      Int
   memberNo    Int       // 1, 2, 3
+  name        String    // Added name field
   isJoined    Boolean   @default(false)
   joinedAt    DateTime?
   isSubmitted Boolean   @default(false)

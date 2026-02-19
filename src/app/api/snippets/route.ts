@@ -1,47 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import fs from 'fs/promises';
+import path from 'path';
 
 export async function GET(req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url);
-        const teamCode = searchParams.get('teamCode');
-        const memberNo = parseInt(searchParams.get('memberNo') || '0');
+        const teamCode = searchParams.get('teamCode') || searchParams.get('code');
+        const memberNo = parseInt(searchParams.get('memberNo') || searchParams.get('member') || '0');
         const language = searchParams.get('language') || 'python';
 
         if (!teamCode || ![1, 2, 3].includes(memberNo)) {
             return NextResponse.json({ error: 'Invalid parameters.' }, { status: 400 });
         }
 
-        const team = await prisma.team.findUnique({
-            where: { teamCode },
-            include: { set: true },
-        });
+        const normalizedCode = teamCode.toUpperCase().trim();
 
+        // 1. Load Configs
+        const teamsConfigPath = path.join(process.cwd(), 'src/config/teams.json');
+        const teamsFile = await fs.readFile(teamsConfigPath, 'utf-8');
+        const teamsConfig = JSON.parse(teamsFile);
+
+        const problemsConfigPath = path.join(process.cwd(), 'src/config/problems.json');
+        const problemsFile = await fs.readFile(problemsConfigPath, 'utf-8');
+        const problemsConfig = JSON.parse(problemsFile);
+
+        if (!teamsConfig || !problemsConfig) {
+            return NextResponse.json({ error: 'System configuration error' }, { status: 500 });
+        }
+
+        // 2. Validate Team & Get Set
+        const team = teamsConfig.find((t: any) => t.teamCode === normalizedCode);
         if (!team) {
-            return NextResponse.json({ error: 'Team not found.' }, { status: 404 });
+             return NextResponse.json({ error: 'Team not found' }, { status: 404 });
         }
 
-        const snippet = await prisma.snippet.findUnique({
-            where: {
-                setId_memberNo_language: {
-                    setId: team.setId,
-                    memberNo,
-                    language,
-                },
-            },
+        const setId = team.set; // "A", "B", ...
+        
+        // 3. Get Snippet from Config
+        const problems = problemsConfig[setId];
+        if (!problems) return NextResponse.json({ error: 'Set not found' }, { status: 404 });
+
+        const memberProblems = problems[memberNo];
+        if (!memberProblems) return NextResponse.json({ error: 'Member problem not found' }, { status: 404 });
+
+        const problemData = memberProblems[language];
+        
+        // Handle new structure { code, expectedOutput } or fallback
+        const codeContent = typeof problemData === 'string' ? problemData : problemData?.code;
+
+        if (!codeContent) return NextResponse.json({ code: `// No problem found for ${language}` });
+
+        return NextResponse.json({ 
+            code: codeContent,
+            setName: `Set ${setId}`
         });
 
-        if (!snippet) {
-            return NextResponse.json({ error: 'Snippet not found.' }, { status: 404 });
-        }
-
-        return NextResponse.json({
-            code: snippet.code,
-            language: snippet.language,
-            setName: team.set.name,
-            memberNo,
-        });
-    } catch {
+    } catch (error) {
+        console.error('Snippet API Error:', error);
         return NextResponse.json({ error: 'Server error' }, { status: 500 });
     }
 }

@@ -1,0 +1,70 @@
+{
+  "A": {
+    "1": {
+      "python": { "code": "# Python 3.10\ndef calculate_sum(arr):\n    return sum(arr)\n\nprint(calculate_sum([1, 2, 3]))", "expectedOutput": "6" },
+      "c": { "code": "// GCC 11.2\n#include <stdio.h>\n\nint main() {\n    printf(\"Hello World\");\n    return 0;\n}", "expectedOutput": "Hello World" },
+      "java": { "code": "// OpenJDK 17\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(\"Hello World\");\n    }\n}", "expectedOutput": "Hello World" }
+    },
+    "2": {
+      "python": { "code": "# Python 3.10\nprint('Member 2')", "expectedOutput": "Member 2" },
+      "c": { "code": "#include <stdio.h>\nint main() { printf(\"Member 2\"); return 0; }", "expectedOutput": "Member 2" },
+      "java": { "code": "public class Main { public static void main(String[] args) { System.out.println(\"Member 2\"); } }", "expectedOutput": "Member 2" }
+    },
+    "3": {
+      "python": { "code": "# Python 3.10\nprint('Member 3')", "expectedOutput": "Member 3" },
+      "c": { "code": "#include <stdio.h>\nint main() { printf(\"Member 3\"); return 0; }", "expectedOutput": "Member 3" },
+      "java": { "code": "public class Main { public static void main(String[] args) { System.out.println(\"Member 3\"); } }", "expectedOutput": "Member 3" }
+    }
+  },
+  "B": {
+    "1": {
+      "python": { "code": "# Python 3.10\nprint('Set B - Mem 1')", "expectedOutput": "Set B - Mem 1" },
+      "c": { "code": "#include <stdio.h>\nint main() { printf(\"Set B - Mem 1\"); return 0; }", "expectedOutput": "Set B - Mem 1" },
+      "java": { "code": "public class Main { public static void main(String[] args) { System.out.println(\"Set B - Mem 1\"); } }", "expectedOutput": "Set B - Mem 1" }
+    },
+    "2": {
+      "python": { "code": "# Python 3.10\nprint('Set B - Mem 2')", "expectedOutput": "Set B - Mem 2" },
+      "c": { "code": "#include <stdio.h>\nint main() { printf(\"Set B - Mem 2\"); return 0; }", "expectedOutput": "Set B - Mem 2" },
+      "java": { "code": "public class Main { public static void main(String[] args) { System.out.println(\"Set B - Mem 2\"); } }", "expectedOutput": "Set B - Mem 2" }
+    },
+    "3": {
+       "python": { "code": "# Python 3.10\nprint('Set B - Mem 3')", "expectedOutput": "Set B - Mem 3" },
+       "c": { "code": "#include <stdio.h>\nint main() { printf(\"Set B - Mem 3\"); return 0; }", "expectedOutput": "Set B - Mem 3" },
+       "java": { "code": "public class Main { public static void main(String[] args) { System.out.println(\"Set B - Mem 3\"); } }", "expectedOutput": "Set B - Mem 3" }
+    }
+  },
+  "C": {
+    "1": {
+      "python": { "code": "# Python 3.10\nprint('Set C - Mem 1')", "expectedOutput": "Set C - Mem 1" },
+      "c": { "code": "#include <stdio.h>\nint main() { printf(\"Set C - Mem 1\"); return 0; }", "expectedOutput": "Set C - Mem 1" },
+      "java": { "code": "public class Main { public static void main(String[] args) { System.out.println(\"Set C - Mem 1\"); } }", "expectedOutput": "Set C - Mem 1" }
+    },
+    "2": {
+      "python": { "code": "# Python 3.10\nprint('Set C - Mem 2')", "expectedOutput": "Set C - Mem 2" },
+      "c": { "code": "#include <stdio.h>\nint main() { printf(\"Set C - Mem 2\"); return 0; }", "expectedOutput": "Set C - Mem 2" },
+      "java": { "code": "public class Main { public static void main(String[] args) { System.out.println(\"Set C - Mem 2\"); } }", "expectedOutput": "Set C - Mem 2" }
+    },
+    "3": {
+       "python": { "code": "# Python 3.10\nprint('Set C - Mem 3')", "expectedOutput": "Set C - Mem 3" },
+       "c": { "code": "#include <stdio.h>\nint main() { printf(\"Set C - Mem 3\"); return 0; }", "expectedOutput": "Set C - Mem 3" },
+       "java": { "code": "public class Main { public static void main(String[] args) { System.out.println(\"Set C - Mem 3\"); } }", "expectedOutput": "Set C - Mem 3" }
+    }
+  },
+  "D": {
+    "1": {
+      "python": { "code": "# Python 3.10\nprint('Set D - Mem 1')", "expectedOutput": "Set D - Mem 1" },
+      "c": { "code": "#include <stdio.h>\nint main() { printf(\"Set D - Mem 1\"); return 0; }", "expectedOutput": "Set D - Mem 1" },
+      "java": { "code": "public class Main { public static void main(String[] args) { System.out.println(\"Set D - Mem 1\"); } }", "expectedOutput": "Set D - Mem 1" }
+    },
+    "2": {
+      "python": { "code": "# Python 3.10\nprint('Set D - Mem 2')", "expectedOutput": "Set D - Mem 2" },
+      "c": { "code": "#include <stdio.h>\nint main() { printf(\"Set D - Mem 2\"); return 0; }", "expectedOutput": "Set D - Mem 2" },
+      "java": { "code": "public class Main { public static void main(String[] args) { System.out.println(\"Set D - Mem 2\"); } }", "expectedOutput": "Set D - Mem 2" }
+    },
+    "3": {
+       "python": { "code": "# Python 3.10\nprint('Set D - Mem 3')", "expectedOutput": "Set D - Mem 3" },
+       "c": { "code": "#include <stdio.h>\nint main() { printf(\"Set D - Mem 3\"); return 0; }", "expectedOutput": "Set D - Mem 3" },
+       "java": { "code": "public class Main { public static void main(String[] args) { System.out.println(\"Set D - Mem 3\"); } }", "expectedOutput": "Set D - Mem 3" }
+    }
+  }
+}

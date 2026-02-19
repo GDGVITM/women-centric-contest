@@ -11,7 +11,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Minimize2,
-  Maximize2,
+  ArrowLeft,
   Moon,
   Sun
 } from 'lucide-react';
@@ -27,72 +27,94 @@ export default function MemberPage({ params }: { params: Promise<{ code: string;
   const [language, setLanguage] = useState('python');
   const [sourceCode, setSourceCode] = useState('');
   const [output, setOutput] = useState('');
+  const [canSubmit, setCanSubmit] = useState(false);
+  const [status, setStatus] = useState('idle');
+  const [problemSet, setProblemSet] = useState('');
   const [isRunning, setIsRunning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  
-  const [problemSet, setProblemSet] = useState('');
   
   // Timer state
   const [startedAt, setStartedAt] = useState<string | null>(null);
 
+  // Determine language based on member ID (initial only) - actually, we verify this against API
+  // Fetch snippet whenever language, code, or neutral id changes.
   useEffect(() => {
-    // Determine language based on member ID
-    // M1: Python, M2: C, M3: Java/Cpp (simplified for demo)
-    const langMap: Record<string, string> = { '1': 'python', '2': 'c', '3': 'cpp' };
-    const defaultCode: Record<string, string> = {
-      python: `# Python 3.10\n# Fix the bug below:\n\ndef calculate_sum(arr):\n    return sum(arr)\n\nprint(calculate_sum([1, 2, 3]))`,
-      c: `// GCC 11.2\n#include <stdio.h>\n\nint main() {\n    printf("Hello World");\n    return 0;\n}`,
-      cpp: `// GCC 11.2\n#include <iostream>\n\nint main() {\n    std::cout << "Hello World";\n    return 0;\n}`
+    setOutput(''); // Clear output on switch
+    setStatus('idle');
+    setCanSubmit(false); // Reset submit status on language change
+    
+    // Fetch snippet for current language
+    const fetchSnippet = async () => {
+      try {
+        const res = await fetch(`/api/snippets?code=${code}&member=${id}&language=${language}`);
+        if (!res.ok) throw new Error('Failed to fetch');
+        const data = await res.json();
+        
+        if(data.code) {
+            setSourceCode(data.code);
+        } else {
+            setSourceCode(`// No snippet found for ${language}`);
+        }
+        if(data.setName) setProblemSet(data.setName);
+      } catch (err) {
+        console.error(err);
+        setSourceCode(`// Error loading snippet for ${language}`);
+      }
     };
 
-    const lang = langMap[id] || 'python';
-    setLanguage(lang);
-    
-    // Fetch initial snippet
-    fetch(`/api/snippets?code=${code}&member=${id}`)
-      .then(res => res.json())
-      .then(data => {
-         if(data.code) setSourceCode(data.code);
-         else setSourceCode(defaultCode[lang]);
-         setProblemSet(data.setName || 'Set A');
-      })
-      .catch(() => setSourceCode(defaultCode[lang]));
+    fetchSnippet();
 
-    // Fetch team start time for timer
+    // Fetch team start time for timer (only once or on mount)
+    // We can keep this separate or loose here.
     fetch(`/api/teams/${code}/status`)
       .then(res => res.json())
       .then(data => {
          if(data.startedAt) setStartedAt(data.startedAt);
+         if(data.status === 'completed' || data.status === 'eliminated') {
+             alert('Round 1 is over for your team.');
+             router.push(`/team/${code}`);
+         }
       });
-
-  }, [code, id]);
+  }, [code, id, language]);
 
   const handleEditorDidMount: OnMount = (editor) => {
     editorRef.current = editor;
+  };
+
+  const handleLanguageChange = (newLang: string) => {
+    setLanguage(newLang);
+    // useEffect will trigger fetch
   };
 
   const runCode = async () => {
     setIsRunning(true);
     setOutput('Compiling and running...');
     setStatus('idle');
+    setCanSubmit(false);
     
     try {
       const res = await fetch('/api/compile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ language, code: sourceCode }),
+        body: JSON.stringify({ 
+            language, 
+            code: sourceCode,
+            teamCode: code,
+            memberId: id 
+        }),
       });
       
       const data = await res.json();
       
-      if (data.run && data.run.output) {
-        setOutput(data.run.output);
-        setStatus(data.run.code === 0 ? 'success' : 'error');
-      } else {
-        setOutput(data.message || 'Execution error');
-        setStatus('error');
+      // Fix: API returns flat stdout/stderr, not nested run object
+      const outputText = data.stdout || data.stderr || data.compileOutput || data.error || 'Execution finished with no output.';
+      setOutput(outputText);
+      setStatus((data.exitCode === 0 && !data.stderr && !data.error) ? 'success' : 'error');
+      
+      if (data.isCorrect) {
+          setCanSubmit(true);
       }
+
     } catch {
       setOutput('Network error regarding compiler service.');
       setStatus('error');
@@ -102,7 +124,12 @@ export default function MemberPage({ params }: { params: Promise<{ code: string;
   };
 
   const submitCode = async () => {
-    const confirmSubmit = window.confirm("Are you sure? Does your code pass all edge cases?");
+    if (!canSubmit) {
+        alert("Please RUN your code first! It must compile successfully and match the expected output to be submitted.");
+        return;
+    }
+    
+    const confirmSubmit = window.confirm("Ready to lock in this solution?");
     if (!confirmSubmit) return;
 
     setIsSubmitting(true);
@@ -117,16 +144,16 @@ export default function MemberPage({ params }: { params: Promise<{ code: string;
       
       if (res.ok) {
         alert('Submitted successfully!');
-        
-        // Check if all submitted
         if (data.allSubmitted) {
-           router.push(`/team/${code}/unlock`);
+           // Disabled redirect as per user request
+           // router.push(`/team/${code}/unlock`);
+           router.push(`/team/${code}`); // Go back to dashboard instead
         } else {
-           router.push(`/team/${code}`); // Back to dashboard
+           router.push(`/team/${code}`); 
         }
-
       } else {
-        alert('Error: ' + data.error);
+        // Show full error from server
+        alert('Error: ' + (data.error || 'Submission failed'));
       }
     } catch {
       alert('Network error');
@@ -135,8 +162,19 @@ export default function MemberPage({ params }: { params: Promise<{ code: string;
     }
   };
 
+  const handleTimeout = async () => {
+      alert('Time Limit Reached! Submitting current code...');
+      // Auto submit whatever they have, then mark eliminated?
+      // Or just mark eliminated? User said "logged out... eliminated"
+      // Let's try to submit (maybe they have partial code) but status will be handled by backend?
+      // Actually, if time is up, they failed the round.
+      // We should probably call an API to set status = eliminated.
+      // For now, let's just push them out.
+      router.push(`/team/${code}`);
+  };
+
   return (
-    <div style={{ height: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ paddingTop: 100, height: '100vh', display: 'flex', flexDirection: 'column' }}>
       
       {/* Editor Toolbar */}
       <div style={{
@@ -147,11 +185,29 @@ export default function MemberPage({ params }: { params: Promise<{ code: string;
          padding: '0 24px'
       }}>
          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <button 
+                onClick={() => router.push(`/team/${code}`)}
+                className="hover:text-white text-gray-400 transition-colors"
+                title="Back to Dashboard"
+            >
+                <ArrowLeft size={20} />
+            </button>
             <div className="badge badge-blue">Member 0{id}</div>
             <div style={{ height: 24, width: 1, background: 'var(--border-subtle)' }} />
-            <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
-               {language.toUpperCase()}
-            </span>
+            
+            {/* Language Selector */}
+            <select 
+              value={language}
+              onChange={(e) => handleLanguageChange(e.target.value)}
+              className="input-field"
+              style={{ width: 'auto', padding: '6px 12px', fontSize: '0.9rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-subtle)' }}
+            >
+              <option value="python">PYTHON</option>
+              <option value="c">C (GCC)</option>
+              <option value="java">JAVA</option>
+              <option value="cpp">C++</option>
+            </select>
+
             <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>•</span>
             <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{problemSet}</span>
          </div>
@@ -160,8 +216,7 @@ export default function MemberPage({ params }: { params: Promise<{ code: string;
          {startedAt && (
             <CountdownTimer 
                startedAt={startedAt} 
-               durationMinutes={CONTEST_CONFIG.roundOneDurationMinutes}
-               onExpired={() => { alert('Time Up!'); submitCode(); }}
+               onExpired={handleTimeout}
             />
          )}
 
@@ -178,8 +233,13 @@ export default function MemberPage({ params }: { params: Promise<{ code: string;
             <button 
                className="btn-primary" 
                onClick={submitCode} 
-               disabled={isSubmitting}
-               style={{ minWidth: 120, justifyContent: 'center' }}
+               disabled={isSubmitting} // Only disable when network is busy
+               style={{ 
+                  minWidth: 120, 
+                  justifyContent: 'center', 
+                  opacity: canSubmit ? 1 : 0.6, 
+                  cursor: isSubmitting ? 'wait' : 'pointer' // Always pointer to invite click for feedback
+               }}
             >
                {isSubmitting ? <Loader2 size={16} className="spin" /> : <Send size={16} />} 
                Submit
@@ -195,7 +255,7 @@ export default function MemberPage({ params }: { params: Promise<{ code: string;
              <Editor
                height="100%"
                defaultLanguage={language}
-               language={language}
+               language={language === 'c' || language === 'cpp' ? 'c' : language} // Monaco uses 'c' for C
                value={sourceCode}
                onChange={(val) => setSourceCode(val || '')}
                onMount={handleEditorDidMount}
@@ -207,6 +267,13 @@ export default function MemberPage({ params }: { params: Promise<{ code: string;
                   scrollBeyondLastLine: false,
                   padding: { top: 20 },
                   lineNumbers: 'on',
+                  // Disable autocomplete
+                  quickSuggestions: false,
+                  suggestOnTriggerCharacters: false,
+                  parameterHints: { enabled: false },
+                  snippetSuggestions: 'none',
+                  wordBasedSuggestions: 'off',
+                  hover: { enabled: true },
                }}
             />
          </div>
