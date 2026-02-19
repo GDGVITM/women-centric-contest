@@ -247,7 +247,29 @@ npx prisma db seed
 
 ---
 
-## 📄 License
+## ☁️ Deployment (Render)
+
+The project is configured for deployment on **Render** (PostgreSQL + Node.js).
+
+### 1. Database (PostgreSQL)
+
+A managed PostgreSQL instance is required (replacing local SQLite).
+
+- **Service Name**: `women-centric-contest-db`
+- **Region**: Frankfurt (or closest to user)
+- **Plan**: Free
+
+### 2. Web Service
+
+- **Build Command**: `npm install && npx prisma generate && npm run build`
+- **Start Command**: `npm start`
+- **Environment Variables**:
+  - `DATABASE_URL`: `postgres://user:password@hostname:port/dbname` (Internal URL from Render Dashboard)
+  - `ADMIN_SECRET`: Your secure admin password
+  - `PISTON_API_URL`: Use the public API or your private instance.
+  - **Private Piston**: For hybrid setup (Local Docker + Ngrok), see [HYBRID_DEPLOY.md](./HYBRID_DEPLOY.md).
+
+> **Important**: After creating the PostgreSQL database on Render, you must copy the **Internal Database URL** from the database dashboard and update the `DATABASE_URL` environment variable in your Web Service settings.
 
 This project is maintained by **GDG on Campus VIT-M**.
 
